@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunshine Market & Deli</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', Arial, sans-serif;
+           
+        }
+
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 100vw;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: flex;
+            text-align: justify;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            padding: 15px 0;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .main-content {
+            width: 50%;
+            padding: 40px 60px;
+        }
+
+        .banner-image {
+            width: 50%;
+            background-image: url('/api/placeholder/800/800');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            text-decoration: none;
+            text-align: center;
+            width: 100%;
+        }
+
+        .logo span {
+            color: #e67e22;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin-left: 30px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        nav ul li a:hover {
+            color: #e67e22;
+        }
+
+        .mobile-toggle {
+            display: none;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://cdnjs.cloudflare.com/ajax/libs/placeholders/0.0.1/img/placeholder.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-align: center;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .hero-subtitle {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: #e67e22;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        .cta-button:hover {
+            background-color: #d35400;
+        }
+
+        /* About Section */
+        .about {
+            padding: 100px 20px;
+            max-width: 90vw;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 36px;
+            text-align: center;
+            margin-bottom: 60px;
+            color: #2c3e50;
+            position: relative;
+        }
+
+        .section-title:after {
+            content: '';
+            width: 80px;
+            height: 4px;
+            background-color: #e67e22;
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .about-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .about-text {
+            flex: 1;
+            min-width: 300px;
+            padding-right: 30px;
+        }
+
+        .about-image {
+            flex: 1;
+            min-width: 300px;
+            height: 700px;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .about-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Products Section */
+        .products {
+            background-color: #f5f5f5;
+            padding: 100px 20px;
+        }
+
+        .products-container {
+            max-width: 90vw;
+            margin: 0 auto;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .product-card {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .product-image {
+            height: 400px;
+            background-color: #ddd;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-details {
+            padding: 20px;
+        }
+
+        .product-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .product-price {
+            color: #e67e22;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .product-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .product-button {
+            display: inline-block;
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .product-button:hover {
+            background-color: #1a252f;
+        }
+
+        /* Services Section */
+        .services {
+            padding: 100px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .service-card {
+            text-align: center;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            background-color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .service-icon {
+            font-size: 40px;
+            color: #e67e22;
+            margin-bottom: 20px;
+        }
+
+        .service-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .service-description {
+            font-size: 15px;
+            color: #666;
+        }
+
+        /* Contact Section */
+        .contact {
+            background-color: #f5f5f5;
+            padding: 100px 20px;
+        }
+
+        .contact-container {
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .contact-content {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .contact-info {
+            flex: 1;
+            min-width: 300px;
+            padding-right: 30px;
+        }
+
+        .contact-form {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+
+        .info-icon {
+            font-size: 20px;
+            color: #e67e22;
+            margin-right: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        textarea.form-control {
+            height: 150px;
+            resize: none;
+        }
+
+        .submit-button {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-button:hover {
+            background-color: #d35400;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 50px 20px 20px;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .footer-section {
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 30px;
+        }
+
+        .footer-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-title:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 2px;
+            background-color: #e67e22;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+            list-style: none;
+        }
+
+        .footer-links a {
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #e67e22;
+        }
+
+        .social-icons {
+            display: flex;
+            margin-top: 15px;
+        }
+
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-right: 10px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            background-color: #e67e22;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            margin-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bdc3c7;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .hero-subtitle {
+                font-size: 18px;
+            }
+
+            .about-content {
+                flex-direction: column;
+            }
+
+            .about-text {
+                margin-bottom: 30px;
+                padding-right: 0;
+            }
+
+            nav ul {
+                display: none;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background-color: white;
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            nav ul.show {
+                display: flex;
+            }
+
+            nav ul li {
+                margin: 10px 0;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 28px;
+            }
+
+            .section-title {
+                font-size: 28px;
+            }
+
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column-reverse;
+            }
+
+            .main-content,
+            .banner-image {
+                width: 100%;
+            }
+
+            .banner-image {
+                height: 300px;
+            }
+
+            .main-content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+    <style>
+        section.about,
+        section.products {
+            width: 100vw;
+            margin: 0 auto;
+
+        }
+
+        .products-container {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-carousel {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            will-change: transform;
+        }
+
+        .product-card {
+            min-width: 90vw;
+            flex-shrink: 0;
+            box-sizing: border-box;
+
+        }
+
+        .carousel-controls {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .carousel-button {
+            padding: 0.5rem 1rem;
+            background: #d1cbc0;
+            border: none;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        @media (min-width: 768px) {
+            .product-card {
+                min-width: 45vw;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .product-card {
+                min-width: 30vw;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <a href="#" class="logo">Sunshine <span>Market</span></a>
+            <!-- <div class="mobile-toggle">☰</div>
+            <nav>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#products">Products</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav> -->
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home"
+        style="background-image: url(https://www.convenience.org/CMSPages/GetFile.aspx?guid=07df5b40-f550-4cd0-8c86-6cfca6ab6c84); background-blend-mode: overlay; background-color: rgba(0, 0, 0, 0.7);">
+        <!-- <div class="pcWNGb" style="width: 406px; top: -2px; bottom: -2px;"></div> -->
+        <div class="hero-content">
+            <h1 class="hero-title" style="color:white">Welcome to Sunshine Market & Deli</h1>
+            <p class="hero-subtitle">Your one-stop shop for fresh groceries, delicious deli items, and more!</p>
+            <a href="#products" class="cta-button">Explore Our Products</a>
+        </div>
+        <!-- <div class="Uf0tqf loaded" style="width: 406px; height: 650px; background-image: url(&quot;https://lh3.googleusercontent.com/p/AF1QipO5koGK-tU_PH9YpUJ8rSfa7jqkNtFgbvBa-1LN=s609-k-no&quot;);"></div> -->
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <h2 class="section-title">About Us</h2>
+        <div class="about-content container">
+            <div class="main-content">
+                <div class="about-text">
+                    <h2 style="color: #9c9286; margin-bottom: 40px;">Coffee, Liquor, Beer, Ice Cream, Food, and more!
+                    </h2>
+                    <h3 style="margin-bottom: 30px;">Great Prices on Liquor, Beer, Tobacco, Groceries and CBD</h3>
+                    <button class="order-button"
+                        style="padding: 1rem 2rem 1rem 2rem; background-color: #d1cbc0; color: black; margin-left:auto; text-align:center; border: none; width:100%; margin-bottom: 20px;">
+                        <a href="https://www.doordash.com/convenience/store/23739860/"
+                            style="text-decoration: none; color: black" target="_blank"> ORDER
+                            DOORDASH DELIVERY</a>
+                    </button>
+                    <h2>Press Coffee, Tea, Cold-Brew Draft</h2>
+                    <div class="product-section">
+                        <p>Featuring hand-roasted Press Coffee and Teas, including Cold Brew.</p>
+                    </div>
+
+                    <h2>Deli, Hot Food To-Go, Ice Cream, and Snacks</h2>
+                    <div class="product-section">
+                        <p>We serve fresh Hot Breakfast Sandwiches, Sausages, Burritos, Subs, Hamburgers, Deli Meats and
+                            Cheeses, Salads, and more! We carry the full line of Ben & Jerry's and Good Humor Ice
+                            Creams.</p>
+                    </div>
+
+                    <button
+                        style="padding: 1rem 2rem 1rem 2rem; background-color: #d1cbc0; color: black; margin-left:auto; text-align:center; border: none; margin-top: 20px; width:100%"
+                        class="order-button">  <a href="https://www.doordash.com/convenience/store/23739860/" style="text-decoration: none; color: black" target="_blank">ORDER FOOD AND LIQUOR DELIVERY NOW!</a></button>
+                </div>
+            </div>
+            <div class="about-image">
+                <img src="https://lh3.googleusercontent.com/p/AF1QipO5koGK-tU_PH9YpUJ8rSfa7jqkNtFgbvBa-1LN=s609-k-no"
+                    alt="Sunshine Market Store Front">
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products" id="products">
+        <div class="products-container">
+            <h2 class="section-title">Our Products</h2>
+            <div class="product-grid product-carousel">
+                <div class=" product-card">
+                    <div class="product-image">
+                        <img src="https://images.squarespace-cdn.com/content/v1/54a8be34e4b00d49fab18042/1497310819907-UKT0UJMJAZUXAQ8CLD9U/image-asset.jpeg"
+                            alt="Fresh Produce">
+                    </div>
+                    <!-- <div class="product-details">
+                        <h3 class="product-title">Fresh Produce</h3>
+                        <p class="product-description">Locally sourced fruits and vegetables, delivered fresh daily.</p>
+                        <a href="#" class="product-button">View Selection</a>
+                    </div> -->
+                </div>
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="data:image/jpeg;base64,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"
+                            alt="Deli Counter">
+                    </div>
+                    <!-- <div class="product-details">
+                        <h3 class="product-title">Deli Counter</h3>
+                        <p class="product-description">Gourmet sandwiches, premium meats, and artisanal cheeses.</p>
+                        <a href="#" class="product-button">View Selection</a>
+                    </div> -->
+                </div>
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9DnkD1ak18Qs1f9z-3fg-G_MwS65OCwGjHqB03ernOmK8RtI5"
+                            alt="Craft Beer">
+                    </div>
+                    <!-- <div class="product-details">
+                        <h3 class="product-title">Craft Beer & Wine</h3>
+                        <p class="product-description">Curated selection of local and international favorites.</p>
+                        <a href="#" class="product-button">View Selection</a>
+                    </div> -->
+                </div>
+
+            </div>
+            <div class="carousel-controls">
+                <!-- <button class="carousel-button" onclick="moveCarousel(-1)">Prev</button>
+    <button class="carousel-button" onclick="moveCarousel(1)">Next</button> -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <!-- <section style="background-color: #222; width: 100%; padding: 4rem 0; text-align: center; color: #fff;">
+        <h2 class="section-title">Our Services</h2>
+        <h2 style="color:#d1cbc0; margin-bottom:20px">Sign up for Discounts and Coupons!</h2>
+        <p style="margin-bottom:10px">We will email you with specials and coupons!</p>
+        <div>
+            <input type="text" placeholder="Enter your email address" class="email-input"
+                style="padding: 1rem 2rem 1rem 2rem; width: 30vw; border-radius: 2px; border: 1px solid #d1cbc0; background-color:#222; font-weight: 400; color: #d1cbc0">
+            <button type="submit"
+                style=" width: 150px; padding: 1rem 2rem 1rem 2rem; background-color: #d1cbc0; color: black; margin-left:auto; text-align:center; border: none">SIGN
+                UP</button>
+        </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">🥪</div>
+                <h3 class="service-title">Catering Services</h3>
+                <p class="service-description">Let us cater your next event with our delicious platters and party trays.
+                </p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🚚</div>
+                <h3 class="service-title">Home Delivery</h3>
+                <p class="service-description">We deliver your favorite products right to your doorstep.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🎁</div>
+                <h3 class="service-title">Gift Baskets</h3>
+                <p class="service-description">Custom gift baskets for any occasion, filled with gourmet treats.</p>
+            </div>
+        </div>
+    </section> -->
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="contact-container">
+            <h2 class="section-title">Contact Us</h2>
+            <div class="contact-content" style="width: 100%;">
+                <div class="">
+                    <div class="" style="display: flex; margin-bottom: 20px;">
+                        <div class="info-icon">📍</div>
+                        <div>
+                            <h3>Our Location</h3>
+                            <p>2302 North 12th Street, Phoenix, Arizona 85006, United States</p>
+                        </div>
+                    </div>
+                    <div class="" style="display: flex; margin-bottom: 20px;">
+                        <div class="info-icon">📱</div>
+                        <div>
+                            <h3>Phone Number</h3>
+                            <p>602-253-8952</p>
+                        </div>
+                    </div>
+                    <div class="" style="display: flex; margin-bottom: 20px;">
+                        <div class="info-icon">✉️</div>
+                        <div>
+                            <h3>Email Address</h3>
+                            <p>hello@sunshinemarket.shop</p>
+                        </div>
+                    </div>
+                    <div class="" style="display: flex; margin-bottom: 20px;">
+                        <div class="info-icon">🕒</div>
+                        <div>
+                            <h3>Opening Hours</h3>
+                            <p>Monday - Saturday: 7:00 AM - 9:00 PM</p>
+                            <p>Sunday: 8:00 AM - 8:00 PM</p>
+                        </div>
+                    </div>
+                    <div>
+                        <p style="font-weight: 300;">To Order Delivery of Liquor & Food: 602-253-8952 or email!</p>
+                    </div>
+                </div>
+                <!-- <div class="contact-form">
+                    <form>
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Your Name">
+                        </div>
+                        <div class="form-group">
+                            <input type="email" class="form-control" placeholder="Your Email">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Subject">
+                        </div>
+                        <div class="form-group">
+                            <textarea class="form-control" placeholder="Your Message"></textarea>
+                        </div>
+                        <button type="submit" class="submit-button">Send Message</button>
+                    </form>
+                </div> -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+
+    <div style="width: 100%; text-align: center; margin-top: 20px;">
+        <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3328.080589366263!2d-112.059385825668!3d33.47325254808301!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x872b12722c64b1c3%3A0xb551180aab2c7ac6!2s2302%20N%2012th%20St%2C%20Phoenix%2C%20AZ%2085006%2C%20USA!5e0!3m2!1sen!2sin!4v1747408302193!5m2!1sen!2sin"
+            width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+
+
+    <!-- <footer>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3 class="footer-title">Sunshine Market & Deli</h3>
+                <p>Your one-stop shop for fresh groceries, delicious deli items, and more!</p>
+                <div class="social-icons">
+                    <a href="#"><span>fb</span></a>
+                    <a href="#"><span>tw</span></a>
+                    <a href="#"><span>ig</span></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3 class="footer-title">Quick Links</h3>
+                <ul class="footer-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#products">Products</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#contact">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3 class="footer-title">Departments</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Fresh Produce</a></li>
+                    <li><a href="#">Deli Counter</a></li>
+                    <li><a href="#">Bakery</a></li>
+                    <li><a href="#">Dairy & Eggs</a></li>
+                    <li><a href="#">Beer & Wine</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3 class="footer-title">Newsletter</h3>
+                <p>Subscribe to our newsletter for weekly updates and promotions.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="email" class="form-control" placeholder="Your Email">
+                    </div>
+                    <button type="submit" class="submit-button">Subscribe</button>
+                </form>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2025 Sunshine Market & Deli. All Rights Reserved.</p>
+        </div>
+    </footer> -->
+    <!-- <footer> -->
+    <div style="background-color: #eeeeee; text-align: center; padding: 40px 20px; font-family: Arial, sans-serif;">
+        <p style="color: #555555; font-size: 14px; letter-spacing: 1px; margin: 0;">
+            COPYRIGHT © 2025 SUNSHINE MARKET - ALL RIGHTS RESERVED.
+        </p>
+
+        <div style="margin: 20px auto; width: 40px; height: 1px; background-color: #000;"></div>
+
+        <p style="color: #7c7368; font-size: 14px; letter-spacing: 1px; margin: 0;">
+            POWERED BY <a href="https://gotestli.com" target="_blank"
+                style="color: #e67d22; text-decoration: none;">GOTESTLI</a>
+        </p>
+    </div>
+    <!-- </footer> -->
+
+    <script>
+        // Mobile Navigation Toggle
+        document.querySelector('.mobile-toggle').addEventListener('click', function () {
+            document.querySelector('nav ul').classList.toggle('show');
+        });
+
+        // Smooth Scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+
+                // Close mobile menu if open
+                document.querySelector('nav ul').classList.remove('show');
+            });
+        });
+    </script>
+    <script>
+        let currentIndex = 0;
+        function moveCarousel(direction) {
+            const carousel = document.querySelector('.product-carousel');
+            const cards = document.querySelectorAll('.product-card');
+            const total = cards.length;
+            const visibleCount = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
+            const maxIndex = total - visibleCount;
+
+            currentIndex += direction;
+            if (currentIndex < 0) currentIndex = maxIndex;
+            if (currentIndex > maxIndex) currentIndex = 0;
+
+            const cardWidth = cards[0].offsetWidth;
+            carousel.style.transform = `translateX(-${currentIndex * cardWidth}px)`;
+        }
+
+        // Auto scroll every 4 seconds
+        setInterval(() => moveCarousel(1), 3000);
+    </script>
+
+</body>
+
+</html>
