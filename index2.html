@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Data Uploader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body
+    style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(to right, #e0eafc, #cfdef3);">
+
+    <div
+        style="max-width: 600px; margin: 40px auto; background-color: white; padding: 30px 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+         <div style="text-align: center; color: #2c3e50; font-size: 24px; margin-bottom: 25px;">
+                 <a href="/vendor_choice.html"
+                style="font-size:14px; margin-left:20px; color:#007bff; text-decoration:none;">Go to Vendor Invoice
+                Upload</a>
+                <a href="/sales_analytics.html"
+                style="font-size:14px; margin-left:20px; color:#007bff; text-decoration:none;">Dashboard
+                </a>
+            </div>
+        <h2 style="text-align: center; color: #2c3e50; font-size: 24px; margin-bottom: 25px;">
+            📤 Upload Your Files & View Data
+           
+           
+        </h2>
+
+
+        <label for="category"
+            style="font-weight: 600; display: block; margin-bottom: 6px; color: #333;">Category:</label>
+        <input id="category" type="text" placeholder="Enter category"
+            style="width: 100%; padding: 12px; margin-bottom: 18px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
+
+        <label for="csvFile" style="font-weight: 600; display: block; margin-bottom: 6px; color: #333;">CSV
+            File:</label>
+        <input id="csvFile" type="file" accept=".csv" style="margin-bottom: 18px; width: 100%; font-size: 14px;">
+
+        <label for="excelFile" style="font-weight: 600; display: block; margin-bottom: 6px; color: #333;">Excel File
+            (optional):</label>
+        <input id="excelFile" type="file" accept=".xlsx, .xls"
+            style="margin-bottom: 25px; width: 100%; font-size: 14px;">
+
+        <button onclick="submitForm()"
+            style="width: 100%; background: linear-gradient(to right, #667eea, #764ba2); color: white; border: none; padding: 14px; font-size: 16px; font-weight: 600; border-radius: 10px; cursor: pointer; transition: 0.3s;">
+            🚀 Submit
+        </button>
+
+        <div id="result" style="margin-top: 30px;"></div>
+    </div>
+
+    <script>
+        async function submitForm() {
+            const category = document.getElementById('category').value;
+            const csvFile = document.getElementById('csvFile').files[0];
+            const excelFile = document.getElementById('excelFile').files[0];
+            const resultDiv = document.getElementById('result');
+
+            if (!csvFile) {
+                resultDiv.innerHTML = `<p style='color: red; text-align:center;'>❗ Please upload a CSV file.</p>`;
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("category", category);
+            formData.append("csv_file", csvFile);
+            if (excelFile) formData.append("excel_file", excelFile);
+
+            resultDiv.innerHTML = "<p style='text-align:center; color:#555;'>⏳ Processing...</p>";
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/api/revenue/revenue-analyze?category=${formData.category}`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.sold_items && Array.isArray(data.sold_items) && data.sold_items.length > 0) {
+                    let table = '<div style="overflow-x:auto;">';
+                    table += '<table style="width:100%; border-collapse: collapse; margin-top: 20px; background: #fefefe; border-radius: 8px;">';
+
+                    // Table header
+                    table += `
+    <tr style="background-color: #6a11cb; background-image: linear-gradient(315deg, #6a11cb 0%, #2575fc 74%); color: white;">
+      <th style="padding: 12px; border: 1px solid #ddd;">Item Identifier</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Item Name</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Customer Price</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Vendor Price</th>
+ 
+      <th style="padding: 12px; border: 1px solid #ddd;">Revenue</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Date</th>
+
+    </tr>
+  `;
+
+                    // Table rows
+                    data.sold_items.forEach((item, index) => {
+                        table += `
+      <tr style="background-color: ${index % 2 === 0 ? '#f9f9f9' : '#ffffff'};">
+        <td style="padding: 10px; border: 1px solid #ddd;">${item.item_identifier}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${item.item_name}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">$${item.price.toFixed(2)}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">$${item.vendor_price}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">$${item.revenue.toFixed(2)}</td>
+         <td style="padding: 10px; border: 1px solid #ddd;">${item.date}</td>
+      </tr>
+    `;
+                    });
+
+                    table += '</table></div>';
+
+
+                    resultDiv.innerHTML = `
+    <h3 style="text-align:center; margin-top:20px;">🧾 Sold Items for Category: <span style="color:#007bff;">${data.category}</span></h3>
+    ${table}
+    <div style="display:flex; flex-direction:column; align-items:center; margin-top:20px;">
+     <p style="margin-top:15px; text-align:center;"><strong>Total Vendor Cost:</strong> $${data.total_cost.toFixed(2)} | <strong>Total Customer Price:</strong> $${data.total_price.toFixed(2)}</p>
+    <p style="margin-top:15px; text-align:center;"><strong>Total Revenue:</strong> $${data.total_revenue.toFixed(2)} | <strong>Total Discount:</strong> $${data.total_discount.toFixed(2)}</p>
+    </div>
+    `;
+                } else {
+                    resultDiv.innerHTML = `<p style="text-align:center; color:#999;">No sold items found for this category.</p>`;
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                resultDiv.innerHTML = `<p style='color: red; text-align:center;'>❗ An error occurred while processing your request.</p>`;
+            }
+        }
+    </script>
+
+</body>
+
+</html>

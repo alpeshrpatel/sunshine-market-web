@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Vendor Invoice Processing</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .process-btn {
+            width: 100%;
+            background: linear-gradient(to right, #00b09b, #96c93d);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .process-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .process-btn:disabled {
+            background: #ccc !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+
+        .result-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .download-btn {
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+           .excel-data-section {
+            margin-top: 30px;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .excel-data-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .excel-data-header h3 {
+            margin: 0;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+
+        .records-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .excel-table th {
+            background: #f8f9fa;
+            color: #495057;
+            font-weight: 600;
+            padding: 15px 12px;
+            text-align: left;
+            border-bottom: 2px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        .excel-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+
+        .excel-table tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        .excel-table tr:nth-child(even) {
+            background-color: #fdfdff;
+        }
+
+        .excel-table tr:nth-child(even):hover {
+            background-color: #f0f4ff;
+        }
+
+        /* Pagination Styles */
+        .pagination-container {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .pagination-info {
+            color: #6c757d;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-size-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .page-size-selector select {
+            padding: 6px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #495057;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .pagination-btn:disabled {
+            background: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+            border-color: #dee2e6;
+        }
+
+        .pagination-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Search and Filter */
+        .table-controls {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .clear-search {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .clear-search:hover {
+            background: #c82333;
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px;
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .pagination-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .table-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Enhanced Cell Styling */
+        .cell-number {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .cell-sku {
+            font-family: 'Courier New', monospace;
+            background: #f0f8ff;
+            padding: 8px 12px !important;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .cell-updated {
+            background: #d4edda !important;
+            border-left: 4px solid #28a745;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 style="text-align:center; margin-bottom:20px;">📦 Vendor Invoice Upload</h2>
+
+        <!-- Remove the form wrapper to prevent form submission -->
+        <div>
+            <label>Select Vendor:</label>
+            <select id="vendor" class="form-input">
+                <option value="">-- Select --</option>
+                <option value="vendor_a">Arizona Select Distribution</option>
+                <option value="vendor_b">Southern Glazer's of AZ</option>
+            </select>
+
+            <label>Upload Vendor PDF:</label>
+            <input type="file" id="pdfFile" accept=".pdf" class="form-input">
+
+            <label>Upload Master Excel File:</label>
+            <input type="file" id="excelFile" accept=".xlsx,.xls" class="form-input">
+
+            <button id="processBtn" class="process-btn" type="button">🚀 Process Invoice</button>
+        </div>
+
+        <div id="result" class="result-section"></div>
+        <div id="downloadLink" class="result-section"></div>
+        <div id="excelDataSection" class="excel-data-section" style="display: none;"></div>
+    </div>
+    </div>
+
+     <script>
+        <!-- let isProcessing = false; -->
+      
+        let filteredData = [];
+        let currentPage = 1;
+        let pageSize = 25;
+        let searchTerm = '';
+
+        function showMessage(message, type = 'info') {
+            const resultDiv = document.getElementById("result");
+            const statusClass = type === 'error' ? 'status-error' : 
+                              type === 'success' ? 'status-success' : 'status-info';
+            
+            resultDiv.innerHTML = `<div class="status-message ${statusClass}">${message}</div>`;
+        }
+
+        function clearResults() {
+            document.getElementById("result").innerHTML = "";
+            document.getElementById("downloadSection").style.display = "none";
+            document.getElementById("excelDataSection").style.display = "none";
+            excelData = [];
+            filteredData = [];
+        }
+
+        function setProcessingState(processing) {
+            isProcessing = processing;
+            const btn = document.getElementById("processBtn");
+
+            if (processing) {
+                btn.innerHTML = '<span class="loading-spinner"></span>Processing...';
+                btn.disabled = true;
+            } else {
+                btn.innerHTML = "🚀 Process Invoice";
+                btn.disabled = false;
+            }
+        }
+
+        // Excel Data Display Functions
+        function displayExcelData(data) {
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                document.getElementById("excelDataSection").style.display = "none";
+                return;
+            }
+
+            excelData = data;
+            filteredData = [...data];
+            currentPage = 1;
+            
+            renderTable();
+            document.getElementById("excelDataSection").style.display = "block";
+        }
+
+        function filterData() {
+            const searchInput = document.getElementById("searchInput");
+            searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            
+            if (!searchTerm) {
+                filteredData = [...excelData];
+            } else {
+                filteredData = excelData.filter(row => {
+                    return Object.values(row).some(value => 
+                        value && value.toString().toLowerCase().includes(searchTerm)
+                    );
+                });
+            }
+            
+            currentPage = 1;
+            renderTable();
+        }
+
+        function changePage(newPage) {
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderTable();
+            }
+        }
+
+        function changePageSize(newSize) {
+            pageSize = parseInt(newSize);
+            currentPage = 1;
+            renderTable();
+        }
+
+        function renderTable() {
+            if (!filteredData || filteredData.length === 0) {
+                document.getElementById("excelDataSection").innerHTML = `
+                    <div class="excel-data-header">
+                        <h3>📊 Excel Data</h3>
+                        <span class="records-count">No data</span>
+                    </div>
+                    <div style="padding: 40px; text-align: center; color: #6c757d;">
+                        <p>No data available to display</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Get column headers
+            const headers = Object.keys(filteredData[0]);
+            const totalRecords = filteredData.length;
+            const totalPages = Math.ceil(totalRecords / pageSize);
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, totalRecords);
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            // Generate table HTML
+            let tableHTML = `
+                <div class="excel-data-header">
+                    <h3>📊 Excel Data</h3>
+                    <span class="records-count">${totalRecords} records</span>
+                </div>
+                
+                <div class="table-controls">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" class="search-input" 
+                               placeholder="Search in all columns..." 
+                               value="${searchTerm}"
+                               oninput="filterData()">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    ${searchTerm ? '<button class="clear-search" onclick="clearSearch()">Clear</button>' : ''}
+                </div>
+
+                <div class="table-container">
+                    <table class="excel-table">
+                        <thead>
+                            <tr>
+                                ${headers.map(header => 
+                                    `<th>${header || 'Column'}</th>`
+                                ).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            // Add table rows
+            pageData.forEach(row => {
+                tableHTML += '<tr>';
+                headers.forEach(header => {
+                    const value = row[header];
+                    let cellClass = '';
+                    let displayValue = value !== null && value !== undefined ? value : '';
+                    
+                    // Special formatting for different column types
+                    if (header && header.toLowerCase().includes('sku')) {
+                        cellClass = 'cell-sku';
+                    } else if (header && (header.toLowerCase().includes('quantity') || 
+                                        header.toLowerCase().includes('price') || 
+                                        header.toLowerCase().includes('amount'))) {
+                        cellClass = 'cell-number';
+                        if (typeof value === 'number') {
+                            displayValue = value.toLocaleString();
+                        }
+                    }
+                    
+                    tableHTML += `<td class="${cellClass}">${displayValue}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Add pagination
+            if (totalPages > 1) {
+                const paginationHTML = generatePaginationHTML(currentPage, totalPages, startIndex, endIndex, totalRecords);
+                tableHTML += paginationHTML;
+            } else {
+                tableHTML += `
+                    <div class="pagination-container">
+                        <div class="pagination-info">
+                            Showing ${startIndex + 1} to ${endIndex} of ${totalRecords} entries
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById("excelDataSection").innerHTML = tableHTML;
+        }
+
+        function generatePaginationHTML(currentPage, totalPages, startIndex, endIndex, totalRecords) {
+            let paginationHTML = `
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Showing ${startIndex + 1} to ${endIndex} of ${totalRecords} entries
+                    </div>
+                    
+                    <div class="pagination-controls">
+                        <div class="page-size-selector">
+                            <span>Show:</span>
+                            <select onchange="changePageSize(this.value)">
+                                <option value="10" ${pageSize === 10 ? 'selected' : ''}>10</option>
+                                <option value="25" ${pageSize === 25 ? 'selected' : ''}>25</option>
+                                <option value="50" ${pageSize === 50 ? 'selected' : ''}>50</option>
+                                <option value="100" ${pageSize === 100 ? 'selected' : ''}>100</option>
+                            </select>
+                        </div>
+                        
+                        <div class="pagination-buttons">
+                            <button class="pagination-btn" onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''}>
+                                ⏮
+                            </button>
+                            <button class="pagination-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                                ◀
+                            </button>
+            `;
+
+            // Page number buttons
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === currentPage ? 'active' : '';
+                paginationHTML += `
+                    <button class="pagination-btn ${isActive}" onclick="changePage(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            paginationHTML += `
+                            <button class="pagination-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                                ▶
+                            </button>
+                            <button class="pagination-btn" onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>
+                                ⏭
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return paginationHTML;
+        }
+
+        function clearSearch() {
+            document.getElementById("searchInput").value = '';
+            searchTerm = '';
+            filteredData = [...excelData];
+            currentPage = 1;
+            renderTable();
+        }
+
+    </script>
+     
+
+    <script>
+        let isProcessing = false;
+        let excelData = [];
+
+        function showMessage(elementId, message, color = '#555') {
+            document.getElementById(elementId).innerHTML = `<p style="color:${color};">${message}</p>`;
+        }
+
+        function clearResults() {
+            document.getElementById("result").innerHTML = "";
+            document.getElementById("downloadLink").innerHTML = "";
+        }
+
+        function setProcessingState(processing) {
+            isProcessing = processing;
+            const btn = document.getElementById("processBtn");
+
+            if (processing) {
+                btn.innerHTML = "⏳ Processing...";
+                btn.disabled = true;
+            } else {
+                btn.innerHTML = "🚀 Process Invoice";
+                btn.disabled = false;
+            }
+        }
+
+        // Method 1: Download using separate endpoint (recommended)
+        async function downloadFile(downloadUrl) {
+            try {
+                const response = await fetch(`http://127.0.0.1:8000${downloadUrl}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Download failed: ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'updated_invoice.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                showMessage("result", "✅ File downloaded successfully!", "green");
+            } catch (error) {
+                console.error("Download error:", error);
+                showMessage("result", `❌ Download failed: ${error.message}`, "red");
+            }
+        }
+
+        // Method 2: Download from base64 content (alternative approach)
+        function downloadFromBase64(fileContent, filename) {
+            try {
+                const byteCharacters = atob(fileContent);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                });
+
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                showMessage("result", "✅ File downloaded successfully!", "green");
+            } catch (error) {
+                console.error("Download error:", error);
+                showMessage("result", `❌ Download failed: ${error.message}`, "red");
+            }
+        }
+
+        async function processInvoice(event) {
+            // CRITICAL: Stop any form submission behavior immediately
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+            }
+
+            // Prevent multiple simultaneous calls
+            if (isProcessing) {
+                console.log("Already processing, ignoring call");
+                return false;
+            }
+
+            console.log("=== STARTING PROCESS ===");
+
+            const vendor = document.getElementById("vendor").value;
+            const pdfFile = document.getElementById("pdfFile").files[0];
+            const excelFile = document.getElementById("excelFile").files[0];
+
+            clearResults();
+
+            if (!vendor || !pdfFile || !excelFile) {
+                showMessage("result", "❗ Please fill all fields", "red");
+                return false;
+            }
+
+            setProcessingState(true);
+            showMessage("result", "⏳ Processing...", "#555");
+
+            try {
+                const formData = new FormData();
+                formData.append("vendor", vendor);
+                formData.append("pdf_file", pdfFile);
+                formData.append("excel_file", excelFile);
+
+                console.log("📤 Making API call...");
+                console.log("📋 Request details:", {
+                    url: "http://127.0.0.1:8000/api/invoice/analyze-and-update",
+                    method: "POST",
+                    vendor: vendor,
+                    pdfSize: pdfFile.size,
+                    excelSize: excelFile.size
+                });
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    console.log("⏰ Request timeout - aborting");
+                    controller.abort();
+                }, 30000); // 30 second timeout
+
+                // CRITICAL: Add error handling for the fetch itself
+                let response;
+                try {
+                    response = await fetch("http://127.0.0.1:8000/api/invoice/analyze-and-update", {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            'Accept': 'application/json'
+                        },
+                        signal: controller.signal
+                        
+                    });
+                    console.log("✅ Fetch completed successfully");
+                } catch (fetchError) {
+                    console.error("💥 Fetch error:", fetchError);
+                    console.log("Stack trace:", fetchError.stack);
+                    throw fetchError;
+                }
+
+                clearTimeout(timeoutId);
+                console.log("📊 Response status:", response.status);
+                console.log("📋 Response headers:", Object.fromEntries(response.headers.entries()));
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("❌ Response not OK:", errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                console.log("🔄 Parsing JSON response...");
+                let result;
+                try {
+                    result = await response.json();
+                    excelData = result.excel_data || [];
+                    displayExcelData(excelData);
+                    console.log("✅ JSON parsed successfully");
+                } catch (jsonError) {
+                    console.error("💥 JSON parse error:", jsonError);
+                    const responseText = await response.text();
+                    console.error("📄 Response text:", responseText);
+                    throw new Error("Invalid JSON response from server");
+                }
+
+                console.log("📊 API response:", result);
+
+                if (result.status === "error") {
+                    throw new Error(result.message);
+                }
+
+                // Show success message
+                showMessage("result", "✅ Processing completed successfully!", "green");
+
+                // Handle download based on response format
+                if (result.download_url) {
+                    // Method 1: Show download button for separate endpoint
+                    document.getElementById("downloadLink").innerHTML =
+                        `<button onclick="downloadFile('${result.download_url}')" class="download-btn">
+                📎 Download Updated File
+                </button>`;
+                } else if (result.file_content) {
+                    // Method 2: Download from base64 content
+                    document.getElementById("downloadLink").innerHTML =
+                        `<button onclick="downloadFromBase64('${result.file_content}', '${result.filename || 'updated_invoice.xlsx'}')" class="download-btn">
+                📎 Download Updated File
+                </button>`;
+                }
+
+                return true;
+
+            } catch (error) {
+                console.error("Error:", error);
+                if (error.name === 'AbortError') {
+                    showMessage("result", `❌ Request timeout - please try again`, "red");
+                } else {
+                    showMessage("result", `❌ Error: ${error.message}`, "red");
+                }
+                return false;
+            } finally {
+                console.log("=== PROCESS COMPLETE ===");
+                setProcessingState(false);
+            }
+        }
+
+        // Event setup with COMPREHENSIVE debugging
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log("DOM ready");
+
+            // Add debugging for ANY navigation attempts
+            let originalPushState = history.pushState;
+            let originalReplaceState = history.replaceState;
+            
+            history.pushState = function() {
+                console.log("ALERT: pushState called", arguments);
+                return originalPushState.apply(history, arguments);
+            };
+            
+            history.replaceState = function() {
+                console.log("ALERT: replaceState called", arguments);
+                return originalReplaceState.apply(history, arguments);
+            };
+
+            // Monitor for ANY form elements being created
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeName === 'FORM') {
+                            console.log("ALERT: Form element detected!", node);
+                            node.addEventListener('submit', function(e) {
+                                console.log("ALERT: Form submission blocked!");
+                                e.preventDefault();
+                                e.stopPropagation();
+                                return false;
+                            });
+                        }
+                    });
+                });
+            });
+            observer.observe(document, { childList: true, subtree: true });
+
+            // Prevent ANY form submissions globally with multiple methods
+            document.addEventListener('submit', function (e) {
+                console.log("ALERT: Form submission prevented!", e.target);
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                return false;
+            }, { passive: false, capture: true });
+
+            // Monitor for page unload attempts
+            window.addEventListener('beforeunload', function(e) {
+                console.log("ALERT: Page unload attempt detected!");
+                if (isProcessing) {
+                    console.log("ALERT: Blocking unload - processing in progress");
+                    e.preventDefault();
+                    e.returnValue = 'Processing in progress';
+                    return 'Processing in progress';
+                }
+            });
+
+            // Monitor for location changes
+            let currentLocation = window.location.href;
+            setInterval(function() {
+                if (window.location.href !== currentLocation) {
+                    console.log("ALERT: Location changed from", currentLocation, "to", window.location.href);
+                    currentLocation = window.location.href;
+                }
+            }, 100);
+
+            // Button click handler with ULTIMATE safeguards
+            const processBtn = document.getElementById("processBtn");
+            
+            // Remove any existing event listeners first
+            processBtn.replaceWith(processBtn.cloneNode(true));
+            const newProcessBtn = document.getElementById("processBtn");
+            
+            newProcessBtn.addEventListener('click', function (e) {
+                console.log("🔥 Button clicked - starting debug trace");
+                console.log("Event details:", {
+                    type: e.type,
+                    target: e.target,
+                    currentTarget: e.currentTarget,
+                    defaultPrevented: e.defaultPrevented,
+                    cancelable: e.cancelable
+                });
+                
+                // CRITICAL: Prevent any default behavior IMMEDIATELY
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                console.log("✅ Event prevention applied, defaultPrevented:", e.defaultPrevented);
+
+                // Force stop any navigation
+                if (window.onbeforeunload) {
+                    window.onbeforeunload = null;
+                }
+
+                // Check for any forms in the DOM
+                const forms = document.querySelectorAll('form');
+                console.log("📋 Forms found in DOM:", forms.length);
+                forms.forEach((form, index) => {
+                    console.log(`Form ${index}:`, form);
+                });
+
+                // Only process if not already processing
+                if (!isProcessing) {
+                    console.log("🚀 Starting processInvoice");
+                    processInvoice(e).catch(error => {
+                        console.error("❌ Process invoice error:", error);
+                        showMessage("result", `❌ Unexpected error: ${error.message}`, "red");
+                        setProcessingState(false);
+                    });
+                } else {
+                    console.log("⚠️ Already processing, skipping");
+                }
+
+                console.log("🔚 Button click handler ending");
+                // Multiple ways to prevent form submission
+                return false;
+            }, { passive: false, capture: true });
+
+            // Prevent ANY form of submission on enter key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    // If it's not a textarea or button, prevent default
+                    if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                    
+                    // If it's our process button, handle it
+                    if (e.target.id === 'processBtn') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        if (!isProcessing) {
+                            processInvoice(e).catch(console.error);
+                        }
+                        
+                        return false;
+                    }
+                }
+            }, { passive: false, capture: true });
+
+            // Prevent any accidental navigation
+            window.addEventListener('beforeunload', function(e) {
+                if (isProcessing) {
+                    const message = 'Processing in progress. Are you sure you want to leave?';
+                    e.returnValue = message;
+                    return message;
+                }
+            });
+
+            console.log("Setup complete");
+        });
+
+        console.log("Script loaded");
+    </script>
+    
+</body>
+
+</html>
