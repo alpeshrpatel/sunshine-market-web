@@ -1,0 +1,162 @@
+# import pandas as pd
+# import re
+
+# def process_revenue_files(sales_df: pd.DataFrame, master_df: pd.DataFrame, category: str) -> dict:
+#     # Filter for the given category (e.g., Costco)
+#     print(f"Processing revenue files for category: {category}")
+#     print("Master Columns:", master_df.columns.tolist())
+#     print("Sales Columns:", sales_df.columns.tolist())
+#     # category_df = master_df[master_df['Categories'].str.lower() == category.lower()]
+   
+
+#     # Split input category string into list and normalize to lowercase
+#     categories = [c.strip().lower() for c in category.split(',')]
+
+#     print(f"Filtering for categories: {categories}")
+
+#     if 'Categories' not in master_df.columns:
+#         raise ValueError("Missing 'Categories' column in master Excel file")
+
+#     # Ensure 'Categories' column is string
+#     master_df['Categories'] = master_df['Categories'].astype(str)
+
+#     # Filter rows where any category is found in the 'Categories' string
+#     category_df = master_df[master_df['Categories'].str.lower().apply(
+#         lambda cell: any(cat in cell for cat in categories)
+#     )]
+
+#     print(f"Filtered master data: {len(category_df)} rows matched.")
+#     print(f"Processing category: {category}, found {len(category_df)} items.")
+
+#     # Prepare lookup set of SKU and Product Codes
+#     category_skus = category_df['SKU'].dropna().astype(str).unique().tolist()
+#     category_codes = category_df[category_df['SKU'].isna()]['Product Code'].dropna().astype(str).unique().tolist()
+#     print(f"Category SKUs: {category_skus}")
+#     print(f"Category Product Codes: {category_codes}")
+
+#     # Combine SKUs and Product Codes into one lookup column in sales_df
+#     sales_df['ItemIdentifier'] = sales_df['Item SKU'].fillna(sales_df['Item Product Code']).astype(str)
+
+#     # Match sales with master items
+#     matched_sales = sales_df[sales_df['ItemIdentifier'].isin(category_skus + category_codes)]
+
+#     # Sum revenue and discount
+#     total_revenue = matched_sales['Total Revenue'].sum()
+#     total_discount = matched_sales['Total Discount'].sum()
+
+#     return {
+#         "category": category,
+#         "total_items_sold": len(matched_sales),
+#         "total_revenue": round(total_revenue, 2),
+#         "total_discount": round(total_discount, 2)
+#     }
+
+
+import pandas as pd
+import re
+
+def process_revenue_files(sales_df: pd.DataFrame, df: pd.DataFrame, category: str) -> dict:
+    print(f"Processing revenue files for category: {category}")
+    
+    # if "Items" not in master_excel:
+    #     raise ValueError("The 'Items' sheet is missing in the master Excel file.")
+
+    # df = master_excel["Items"]
+    df = df.fillna('')  # Replace NaN with empty string
+
+    print(f"Original 'Items' sheet shape: {df.shape}")
+
+    # Find records with empty Clover ID
+    empty_clover = df[df['Clover ID'] == '']
+    print(f"\nFound {len(empty_clover)} records with empty Clover ID")
+
+    if not empty_clover.empty:
+        print("\nProcessing empty Clover ID records...")
+        for idx in empty_clover.index:
+            if idx > 0:
+                prev_idx = idx - 1
+                current_category = df.loc[idx, 'Categories']
+                if current_category:
+                    prev_category = df.loc[prev_idx, 'Categories']
+                    if prev_category:
+                        df.loc[prev_idx, 'Categories'] = prev_category + ',' + current_category
+                    else:
+                        df.loc[prev_idx, 'Categories'] = current_category
+        print("Finished updating categories in previous records.")
+
+    # Drop records with empty Clover ID
+    final_df = df[df['Clover ID'] != '']
+    print(f"Cleaned 'Items' sheet shape: {final_df.shape}")
+
+    # Replace back the cleaned Items sheet into master_excel
+    df = final_df
+
+    # Now continue with category-based revenue matching
+    categories = [c.strip().lower() for c in category.split(',')]
+    print(f"Filtering for categories: {categories}")
+
+    final_df['Categories'] = final_df['Categories'].astype(str)
+
+    category_df = final_df[final_df['Categories'].str.lower().apply(
+        lambda cell: any(cat in cell for cat in categories)
+    )]
+
+    print(f"Filtered master data: {len(category_df)} rows matched.")
+    print(f"Processing category: {category}, found {len(category_df)} items.")
+
+    category_skus = category_df['SKU'].dropna().astype(str).unique().tolist()
+    category_codes = category_df[category_df['SKU'] == '']['Product Code'].dropna().astype(str).unique().tolist()
+
+    sales_df['ItemIdentifier'] = sales_df['Item SKU'].fillna(sales_df['Item Product Code']).astype(str)
+
+    matched_sales = sales_df[sales_df['ItemIdentifier'].isin(category_skus + category_codes)]
+    matched_sales_item_from_inventory = category_df[category_df['SKU'].isin(matched_sales['ItemIdentifier'])]
+
+    total_revenue = matched_sales['Total Revenue'].sum()
+    total_discount = matched_sales['Total Discount'].sum()
+    
+    sold_items = []
+    for _, row in matched_sales.iterrows():
+        vendor_price = 0.0
+        for _, item_row in matched_sales_item_from_inventory.iterrows():
+            if row['ItemIdentifier'] == item_row['SKU']:
+                vendor_price = item_row.get('Cost', '0')
+                break
+        item = {
+            "item_identifier": row.get("ItemIdentifier", ""),
+            "item_name": row.get("Item Name", ""),
+            "price": float(row.get("Item Total with Tax/Fee Amount", 0)),
+            "vendor_price": safe_float(vendor_price),
+            
+            # "cost": float(row.get("Cost", 0)),
+            "revenue": float(row.get("Total Revenue", 0)),
+            "date": row.get("Line Item Date", ""),
+            # "quantity_sold": int(row.get("Qty", 0)) if pd.notnull(row.get("Qty")) else 0
+        }
+        sold_items.append(item)
+    
+    total_price = sum(item['price'] for item in sold_items)
+    total_cost = sum(float(item['vendor_price']) for item in sold_items)
+
+    return {
+        "category": category,
+        "total_items_sold": len(matched_sales),
+        "total_revenue": round(total_revenue, 2),
+        "total_discount": round(total_discount, 2),
+        "total_price": round(total_price, 2),
+        "total_cost": round(total_cost, 2),
+        "sold_items": sold_items
+    }
+
+    # return {
+    #     "category": category,
+    #     "total_items_sold": len(matched_sales),
+    #     "total_revenue": round(total_revenue, 2),
+    #     "total_discount": round(total_discount, 2)
+    # }
+
+def safe_float(val):
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return 0.0
