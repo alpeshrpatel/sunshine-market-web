@@ -5,7 +5,11 @@ from app.api.routes.clover_route import router as clover_router
 from app.api.routes.sales_data_extraction_route import router as sales_data_extraction_router
 from app.api.routes.revenue_analyzer_route import router as revenue_analyzer_router
 
-app = FastAPI()
+# app = FastAPI()
+app = FastAPI(
+    title="Sunshine Market API",
+    root_path="/api"  
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(invoice_router, prefix="/api/invoice", tags=["Invoice"])
-app.include_router(clover_router, prefix="/api/clover", tags=["Clover API"])
-app.include_router(sales_data_extraction_router, prefix="/api/sales", tags=["Sales Data Extraction API"])
-app.include_router(revenue_analyzer_router, prefix="/api/revenue", tags=["Revenue Analysis API"])
+app.include_router(invoice_router, prefix="/invoice", tags=["Invoice"])
+app.include_router(clover_router, prefix="/clover", tags=["Clover API"])
+app.include_router(sales_data_extraction_router, prefix="/sales", tags=["Sales Data Extraction API"])
+app.include_router(revenue_analyzer_router, prefix="/revenue", tags=["Revenue Analysis API"])
