@@ -95,6 +95,112 @@
             font-size: 0.9rem;
         }
 
+        .filters-section {
+            padding: 25px 30px;
+            background: white;
+            border-bottom: 1px solid #e0e6ff;
+            display: none;
+        }
+
+        .filters-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-select, .filter-input {
+            padding: 10px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background: white;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .custom-date-inputs {
+            display: none;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .custom-date-inputs.show {
+            display: flex;
+        }
+
+        .date-separator {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .apply-filter-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .apply-filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .reset-filter-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .reset-filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .filter-status {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            color: #0284c7;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: none;
+        }
+
         .dashboard {
             padding: 30px;
             display: none;
@@ -229,6 +335,23 @@
                 font-size: 2rem;
             }
             
+            .filters-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
+            
+            .filter-select, .filter-input {
+                width: 100%;
+            }
+            
+            .custom-date-inputs {
+                flex-direction: column;
+            }
+            
             .kpi-grid {
                 grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
                 gap: 15px;
@@ -286,6 +409,50 @@
                     <p>Select a CSV file containing your sales data</p>
                     <small>Supported format: CSV files with sales transaction data</small>
                 </div>
+            </div>
+        </div>
+
+        <div class="filters-section" id="filtersSection">
+            <div class="filters-container">
+                <div class="filter-group">
+                    <label class="filter-label">Date Filter</label>
+                    <select id="dateFilter" class="filter-select">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="this_week">This Week</option>
+                        <option value="last_15">Last 15 Days</option>
+                        <option value="last_30">Last 30 Days</option>
+                        <option value="last_45">Last 45 Days</option>
+                        <option value="last_60">Last 60 Days</option>
+                        <option value="last_90">Last 90 Days</option>
+                        <option value="single_date">Single Date</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Single Date</label>
+                    <input type="date" id="singleDate" class="filter-input" style="display: none;">
+                </div>
+
+                <div class="custom-date-inputs" id="customDateInputs">
+                    <div class="filter-group">
+                        <label class="filter-label">From Date</label>
+                        <input type="date" id="fromDate" class="filter-input">
+                    </div>
+                    <span class="date-separator">to</span>
+                    <div class="filter-group">
+                        <label class="filter-label">To Date</label>
+                        <input type="date" id="toDate" class="filter-input">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <button id="applyFilter" class="apply-filter-btn">Apply Filter</button>
+                    <button id="resetFilter" class="reset-filter-btn">Reset</button>
+                </div>
+
+                <div class="filter-status" id="filterStatus"></div>
             </div>
         </div>
 
@@ -349,12 +516,20 @@
 
     <script>
         let salesData = [];
+        let filteredData = [];
         let charts = {};
+        let originalData = [];
 
+        // Initialize event listeners
         document.getElementById('csvFile').addEventListener('change', handleFileUpload);
+        document.getElementById('dateFilter').addEventListener('change', handleDateFilterChange);
+        document.getElementById('applyFilter').addEventListener('click', applyFilter);
+        document.getElementById('resetFilter').addEventListener('click', resetFilter);
 
         function handleFileUpload(event) {
             const file = event.target.files[0];
+            localStorage.setItem('csvFile', file ? file : '');
+            
             if (!file) return;
 
             showLoading(true);
@@ -371,10 +546,13 @@
                         return;
                     }
                     
-                    salesData = results.data;
+                    originalData = results.data;
+                    salesData = [...originalData];
+                    filteredData = [...salesData];
                     processData();
                     showLoading(false);
                     document.getElementById('dashboard').style.display = 'block';
+                    document.getElementById('filtersSection').style.display = 'block';
                 },
                 error: function(error) {
                     showError('Error reading file: ' + error.message);
@@ -383,10 +561,184 @@
             });
         }
 
+        function handleDateFilterChange() {
+            const filterValue = document.getElementById('dateFilter').value;
+            const singleDateInput = document.getElementById('singleDate');
+            const customDateInputs = document.getElementById('customDateInputs');
+            
+            // Hide all special inputs first
+            singleDateInput.style.display = 'none';
+            customDateInputs.classList.remove('show');
+            
+            // Show relevant inputs based on selection
+            if (filterValue === 'single_date') {
+                singleDateInput.style.display = 'block';
+            } else if (filterValue === 'custom') {
+                customDateInputs.classList.add('show');
+            }
+        }
+
+        function applyFilter() {
+            const filterValue = document.getElementById('dateFilter').value;
+            const today = new Date();
+            today.setHours(23, 59, 59, 999); // End of today
+            
+            let startDate, endDate;
+            let filterDescription = '';
+
+            switch (filterValue) {
+                case 'all':
+                    filteredData = [...salesData];
+                    filterDescription = 'All Time';
+                    break;
+                    
+                case 'today':
+                    startDate = new Date(today);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Today';
+                    break;
+                    
+                case 'this_week':
+                    startDate = new Date(today);
+                    const dayOfWeek = startDate.getDay();
+                    startDate.setDate(startDate.getDate() - dayOfWeek);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'This Week';
+                    break;
+                    
+                case 'last_15':
+                    startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() - 15);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Last 15 Days';
+                    break;
+                    
+                case 'last_30':
+                    startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() - 30);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Last 30 Days';
+                    break;
+                    
+                case 'last_45':
+                    startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() - 45);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Last 45 Days';
+                    break;
+                    
+                case 'last_60':
+                    startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() - 60);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Last 60 Days';
+                    break;
+                    
+                case 'last_90':
+                    startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() - 90);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Last 90 Days';
+                    break;
+                    
+                case 'single_date':
+                    const singleDate = document.getElementById('singleDate').value;
+                    if (!singleDate) {
+                        showError('Please select a date');
+                        return;
+                    }
+                    startDate = new Date(singleDate);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(singleDate);
+                    endDate.setHours(23, 59, 59, 999);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = `Single Date: ${singleDate}`;
+                    break;
+                    
+                case 'custom':
+                    const fromDate = document.getElementById('fromDate').value;
+                    const toDate = document.getElementById('toDate').value;
+                    if (!fromDate || !toDate) {
+                        showError('Please select both start and end dates');
+                        return;
+                    }
+                    if (new Date(fromDate) > new Date(toDate)) {
+                        showError('Start date cannot be after end date');
+                        return;
+                    }
+                    startDate = new Date(fromDate);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(toDate);
+                    endDate.setHours(23, 59, 59, 999);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = `Custom Range: ${fromDate} to ${toDate}`;
+                    break;
+                    
+                default:
+                    filteredData = [...salesData];
+                    filterDescription = 'All Time';
+            }
+
+            // Update filter status
+            const filterStatus = document.getElementById('filterStatus');
+            if (filterValue !== 'all') {
+                filterStatus.textContent = `Filtered by: ${filterDescription} (${filteredData.length} records)`;
+                filterStatus.style.display = 'inline-block';
+            } else {
+                filterStatus.style.display = 'none';
+            }
+
+            hideError();
+            processFilteredData();
+        }
+
+        function resetFilter() {
+            document.getElementById('dateFilter').value = 'all';
+            document.getElementById('singleDate').value = '';
+            document.getElementById('fromDate').value = '';
+            document.getElementById('toDate').value = '';
+            document.getElementById('singleDate').style.display = 'none';
+            document.getElementById('customDateInputs').classList.remove('show');
+            document.getElementById('filterStatus').style.display = 'none';
+            
+            filteredData = [...salesData];
+            hideError();
+            processFilteredData();
+        }
+
+        function filterDataByDateRange(startDate, endDate) {
+            return salesData.filter(row => {
+                if (!row['Line Item Date']) return false;
+                
+                const rowDate = new Date(row['Line Item Date']);
+                return rowDate >= startDate && rowDate <= endDate;
+            });
+        }
+
         function processData() {
             // Clean and process the data
             salesData = salesData.filter(row => row['Item Total'] && !isNaN(parseFloat(row['Item Total'])));
+            filteredData = [...salesData];
             
+            // Generate KPIs and charts
+            processFilteredData();
+        }
+
+        function processFilteredData() {
             // Generate KPIs
             generateKPIs();
             
@@ -395,11 +747,11 @@
         }
 
         function generateKPIs() {
-            const totalRevenue = salesData.reduce((sum, row) => sum + parseFloat(row['Item Total'] || 0), 0);
-            const totalItems = salesData.length;
-            const averageOrderValue = totalRevenue / totalItems;
-            const totalTax = salesData.reduce((sum, row) => sum + parseFloat(row['Tax Amount'] || 0), 0);
-            const totalDiscount = salesData.reduce((sum, row) => sum + parseFloat(row['Total Discount'] || 0), 0);
+            const totalRevenue = filteredData.reduce((sum, row) => sum + parseFloat(row['Item Total'] || 0), 0);
+            const totalItems = filteredData.length;
+            const averageOrderValue = totalItems > 0 ? totalRevenue / totalItems : 0;
+            const totalTax = filteredData.reduce((sum, row) => sum + parseFloat(row['Tax Amount'] || 0), 0);
+            const totalDiscount = filteredData.reduce((sum, row) => sum + parseFloat(row['Total Discount'] || 0), 0);
 
             const kpis = [
                 {
@@ -456,8 +808,13 @@
             Object.values(charts).forEach(chart => chart.destroy());
             charts = {};
 
+            if (filteredData.length === 0) {
+                showError('No data available for the selected date range');
+                return;
+            }
+
             // Category Sales Chart
-            const categoryData = groupBy(salesData, 'Item Name');
+            const categoryData = groupBy(filteredData, 'Item Name');
             const topCategories = Object.entries(categoryData)
                 .map(([name, items]) => ({
                     name: name.substring(0, 20) + (name.length > 20 ? '...' : ''),
@@ -466,36 +823,38 @@
                 .sort((a, b) => b.revenue - a.revenue)
                 .slice(0, 8);
 
-            charts.categoryChart = new Chart(document.getElementById('categoryChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: topCategories.map(cat => cat.name),
-                    datasets: [{
-                        data: topCategories.map(cat => cat.revenue),
-                        backgroundColor: [
-                            '#4facfe', '#00f2fe', '#667eea', '#764ba2',
-                            '#f093fb', '#f5576c', '#4ecdc4', '#44a08d'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true
+            if (topCategories.length > 0) {
+                charts.categoryChart = new Chart(document.getElementById('categoryChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: topCategories.map(cat => cat.name),
+                        datasets: [{
+                            data: topCategories.map(cat => cat.revenue),
+                            backgroundColor: [
+                                '#4facfe', '#00f2fe', '#667eea', '#764ba2',
+                                '#f093fb', '#f5576c', '#4ecdc4', '#44a08d'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
 
             // Daily Sales Trend
-            const dailyData = groupBy(salesData, row => {
+            const dailyData = groupBy(filteredData, row => {
                 const date = new Date(row['Line Item Date']);
                 return date.toLocaleDateString();
             });
@@ -507,131 +866,139 @@
                 }))
                 .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-            charts.trendChart = new Chart(document.getElementById('trendChart'), {
-                type: 'line',
-                data: {
-                    labels: trendData.map(d => d.date),
-                    datasets: [{
-                        label: 'Daily Revenue',
-                        data: trendData.map(d => d.revenue),
-                        borderColor: '#4facfe',
-                        backgroundColor: 'rgba(79, 172, 254, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+            if (trendData.length > 0) {
+                charts.trendChart = new Chart(document.getElementById('trendChart'), {
+                    type: 'line',
+                    data: {
+                        labels: trendData.map(d => d.date),
+                        datasets: [{
+                            label: 'Daily Revenue',
+                            data: trendData.map(d => d.revenue),
+                            borderColor: '#4facfe',
+                            backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '$' + value.toFixed(0);
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toFixed(0);
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
 
             // Top Products
-            charts.productsChart = new Chart(document.getElementById('productsChart'), {
-                type: 'bar',
-                data: {
-                    labels: topCategories.slice(0, 6).map(cat => cat.name),
-                    datasets: [{
-                        label: 'Revenue',
-                        data: topCategories.slice(0, 6).map(cat => cat.revenue),
-                        backgroundColor: '#667eea',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+            if (topCategories.length > 0) {
+                charts.productsChart = new Chart(document.getElementById('productsChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: topCategories.slice(0, 6).map(cat => cat.name),
+                        datasets: [{
+                            label: 'Revenue',
+                            data: topCategories.slice(0, 6).map(cat => cat.revenue),
+                            backgroundColor: '#667eea',
+                            borderRadius: 8
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '$' + value.toFixed(0);
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toFixed(0);
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
 
             // Payment Status
-            const statusData = groupBy(salesData, 'Order Payment State');
-            charts.statusChart = new Chart(document.getElementById('statusChart'), {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(statusData),
-                    datasets: [{
-                        data: Object.values(statusData).map(items => items.length),
-                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true
+            const statusData = groupBy(filteredData, 'Order Payment State');
+            if (Object.keys(statusData).length > 0) {
+                charts.statusChart = new Chart(document.getElementById('statusChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(statusData),
+                        datasets: [{
+                            data: Object.values(statusData).map(items => items.length),
+                            backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
 
             // Tax vs Non-Tax
-            const taxItems = salesData.filter(item => parseFloat(item['Item Tax Rate'] || 0) > 0).length;
-            const nonTaxItems = salesData.length - taxItems;
+            const taxItems = filteredData.filter(item => parseFloat(item['Item Tax Rate'] || 0) > 0).length;
+            const nonTaxItems = filteredData.length - taxItems;
 
-            charts.taxChart = new Chart(document.getElementById('taxChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Taxable Items', 'Non-Taxable Items'],
-                    datasets: [{
-                        data: [taxItems, nonTaxItems],
-                        backgroundColor: ['#4facfe', '#f093fb'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true
+            if (taxItems > 0 || nonTaxItems > 0) {
+                charts.taxChart = new Chart(document.getElementById('taxChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Taxable Items', 'Non-Taxable Items'],
+                        datasets: [{
+                            data: [taxItems, nonTaxItems],
+                            backgroundColor: ['#4facfe', '#f093fb'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
 
             // Employee Performance
-            const employeeData = groupBy(salesData, 'Order Employee Name');
+            const employeeData = groupBy(filteredData, 'Order Employee Name');
             const topEmployees = Object.entries(employeeData)
                 .map(([name, items]) => ({
                     name: name || 'Unknown',
@@ -640,37 +1007,39 @@
                 .sort((a, b) => b.revenue - a.revenue)
                 .slice(0, 5);
 
-            charts.employeeChart = new Chart(document.getElementById('employeeChart'), {
-                type: 'bar',
-                data: {
-                    labels: topEmployees.map(emp => emp.name),
-                    datasets: [{
-                        label: 'Total Sales',
-                        data: topEmployees.map(emp => emp.revenue),
-                        backgroundColor: '#764ba2',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+            if (topEmployees.length > 0) {
+                charts.employeeChart = new Chart(document.getElementById('employeeChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: topEmployees.map(emp => emp.name),
+                        datasets: [{
+                            label: 'Total Sales',
+                            data: topEmployees.map(emp => emp.revenue),
+                            backgroundColor: '#764ba2',
+                            borderRadius: 8
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '$' + value.toFixed(0);
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return  value.toFixed(0); 
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         }
 
         function groupBy(array, key) {
