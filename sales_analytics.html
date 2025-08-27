@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -124,7 +125,8 @@
             letter-spacing: 0.5px;
         }
 
-        .filter-select, .filter-input {
+        .filter-select,
+        .filter-input {
             padding: 10px 15px;
             border: 2px solid #e1e5e9;
             border-radius: 10px;
@@ -135,7 +137,8 @@
             min-width: 150px;
         }
 
-        .filter-select:focus, .filter-input:focus {
+        .filter-select:focus,
+        .filter-input:focus {
             outline: none;
             border-color: #4facfe;
             box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
@@ -261,8 +264,13 @@
             font-weight: 600;
         }
 
-        .growth-positive { color: #10b981; }
-        .growth-negative { color: #ef4444; }
+        .growth-positive {
+            color: #10b981;
+        }
+
+        .growth-negative {
+            color: #ef4444;
+        }
 
         .charts-grid {
             display: grid;
@@ -316,8 +324,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .error-message {
@@ -334,43 +347,46 @@
             .header h1 {
                 font-size: 2rem;
             }
-            
+
             .filters-container {
                 flex-direction: column;
                 align-items: stretch;
             }
-            
+
             .filter-group {
                 width: 100%;
             }
-            
-            .filter-select, .filter-input {
+
+            .filter-select,
+            .filter-input {
                 width: 100%;
             }
-            
+
             .custom-date-inputs {
                 flex-direction: column;
             }
-            
+
             .kpi-grid {
                 grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
                 gap: 15px;
             }
-            
+
             .charts-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
-            
+
             .chart-container {
                 height: 250px;
             }
-            
+
             body {
                 padding: 10px;
             }
-            
-            .header, .upload-section, .dashboard {
+
+            .header,
+            .upload-section,
+            .dashboard {
                 padding: 20px;
             }
         }
@@ -379,17 +395,18 @@
             .header h1 {
                 font-size: 1.5rem;
             }
-            
+
             .kpi-value {
                 font-size: 1.5rem;
             }
-            
+
             .chart-container {
                 height: 200px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -405,6 +422,9 @@
                         📁 Choose CSV File
                     </label>
                 </div>
+                <button id="clearStorageBtn" style="margin-top:10px; display:none;">
+                    🗑️ Clear Stored CSV
+                </button>
                 <div class="upload-info">
                     <p>Select a CSV file containing your sales data</p>
                     <small>Supported format: CSV files with sales transaction data</small>
@@ -525,11 +545,93 @@
         document.getElementById('dateFilter').addEventListener('change', handleDateFilterChange);
         document.getElementById('applyFilter').addEventListener('click', applyFilter);
         document.getElementById('resetFilter').addEventListener('click', resetFilter);
+        document.getElementById('clearStorageBtn').addEventListener('click', clearStoredCSV);
+
+        /* ------------------------------
+      IndexedDB Helpers
+   -------------------------------*/
+        function openDB(callback) {
+            const request = indexedDB.open("CSVStorageDB", 1);
+
+            request.onupgradeneeded = function (e) {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains("csv")) {
+                    db.createObjectStore("csv", { keyPath: "id" });
+                }
+            };
+
+            request.onsuccess = function (e) {
+                callback(e.target.result);
+            };
+
+            request.onerror = function (e) {
+                console.error("IndexedDB error:", e.target.error);
+            };
+        }
+
+        function saveCSVtoIndexedDB(data) {
+            openDB((db) => {
+                const tx = db.transaction("csv", "readwrite");
+                const store = tx.objectStore("csv");
+                store.put({ id: "csvData", data: data });
+                console.log("CSV saved in IndexedDB");
+            });
+        }
+
+        function loadCSVfromIndexedDB(callback) {
+            openDB((db) => {
+                const tx = db.transaction("csv", "readonly");
+                const store = tx.objectStore("csv");
+                const getReq = store.get("csvData");
+
+                getReq.onsuccess = function () {
+                    if (getReq.result) {
+                        callback(getReq.result.data);
+                    }
+                };
+            });
+        }
+
+        function clearStoredCSV() {
+            openDB((db) => {
+                const tx = db.transaction("csv", "readwrite");
+                const store = tx.objectStore("csv");
+                store.delete("csvData");
+                tx.oncomplete = function () {
+                    console.log("CSV data cleared from IndexedDB");
+
+                    // Reset UI
+                    salesData = [];
+                    filteredData = [];
+                    originalData = [];
+                    document.getElementById('dashboard').style.display = 'none';
+                    document.getElementById('filtersSection').style.display = 'none';
+                    document.getElementById('clearStorageBtn').style.display = 'none';
+                    alert("Stored CSV has been cleared. You can upload a new file now.");
+                };
+            });
+        }
+
+        /* ------------------------------
+           Restore data on page load
+        -------------------------------*/
+        window.addEventListener("DOMContentLoaded", () => {
+            loadCSVfromIndexedDB((data) => {
+                if (!data) return;
+                originalData = data;
+                salesData = [...originalData];
+                filteredData = [...salesData];
+                processData();
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('filtersSection').style.display = 'block';
+                document.getElementById('clearStorageBtn').style.display = 'inline-block'; // ✅ show button
+            });
+        });
 
         function handleFileUpload(event) {
             const file = event.target.files[0];
             localStorage.setItem('csvFile', file ? file : '');
-            
+
             if (!file) return;
 
             showLoading(true);
@@ -539,22 +641,25 @@
                 header: true,
                 skipEmptyLines: true,
                 dynamicTyping: true,
-                complete: function(results) {
+                complete: function (results) {
                     if (results.errors.length > 0) {
                         showError('Error parsing CSV: ' + results.errors[0].message);
                         showLoading(false);
                         return;
                     }
-                    
+
                     originalData = results.data;
                     salesData = [...originalData];
                     filteredData = [...salesData];
+
+                    saveCSVtoIndexedDB(originalData);
+
                     processData();
                     showLoading(false);
                     document.getElementById('dashboard').style.display = 'block';
                     document.getElementById('filtersSection').style.display = 'block';
                 },
-                error: function(error) {
+                error: function (error) {
                     showError('Error reading file: ' + error.message);
                     showLoading(false);
                 }
@@ -565,11 +670,11 @@
             const filterValue = document.getElementById('dateFilter').value;
             const singleDateInput = document.getElementById('singleDate');
             const customDateInputs = document.getElementById('customDateInputs');
-            
+
             // Hide all special inputs first
             singleDateInput.style.display = 'none';
             customDateInputs.classList.remove('show');
-            
+
             // Show relevant inputs based on selection
             if (filterValue === 'single_date') {
                 singleDateInput.style.display = 'block';
@@ -582,7 +687,7 @@
             const filterValue = document.getElementById('dateFilter').value;
             const today = new Date();
             today.setHours(23, 59, 59, 999); // End of today
-            
+
             let startDate, endDate;
             let filterDescription = '';
 
@@ -591,7 +696,7 @@
                     filteredData = [...salesData];
                     filterDescription = 'All Time';
                     break;
-                    
+
                 case 'today':
                     startDate = new Date(today);
                     startDate.setHours(0, 0, 0, 0);
@@ -599,7 +704,7 @@
                     filteredData = filterDataByDateRange(startDate, endDate);
                     filterDescription = 'Today';
                     break;
-                    
+
                 case 'this_week':
                     startDate = new Date(today);
                     const dayOfWeek = startDate.getDay();
@@ -609,7 +714,7 @@
                     filteredData = filterDataByDateRange(startDate, endDate);
                     filterDescription = 'This Week';
                     break;
-                    
+
                 case 'last_15':
                     startDate = new Date(today);
                     startDate.setDate(startDate.getDate() - 15);
@@ -618,7 +723,7 @@
                     filteredData = filterDataByDateRange(startDate, endDate);
                     filterDescription = 'Last 15 Days';
                     break;
-                    
+
                 case 'last_30':
                     startDate = new Date(today);
                     startDate.setDate(startDate.getDate() - 30);
@@ -627,7 +732,7 @@
                     filteredData = filterDataByDateRange(startDate, endDate);
                     filterDescription = 'Last 30 Days';
                     break;
-                    
+
                 case 'last_45':
                     startDate = new Date(today);
                     startDate.setDate(startDate.getDate() - 45);
@@ -636,7 +741,7 @@
                     filteredData = filterDataByDateRange(startDate, endDate);
                     filterDescription = 'Last 45 Days';
                     break;
-                    
+
                 case 'last_60':
                     startDate = new Date(today);
                     startDate.setDate(startDate.getDate() - 60);
@@ -645,7 +750,7 @@
                     filteredData = filterDataByDateRange(startDate, endDate);
                     filterDescription = 'Last 60 Days';
                     break;
-                    
+
                 case 'last_90':
                     startDate = new Date(today);
                     startDate.setDate(startDate.getDate() - 90);
@@ -654,7 +759,7 @@
                     filteredData = filterDataByDateRange(startDate, endDate);
                     filterDescription = 'Last 90 Days';
                     break;
-                    
+
                 case 'single_date':
                     const singleDate = document.getElementById('singleDate').value;
                     if (!singleDate) {
@@ -668,7 +773,7 @@
                     filteredData = filterDataByDateRange(startDate, endDate);
                     filterDescription = `Single Date: ${singleDate}`;
                     break;
-                    
+
                 case 'custom':
                     const fromDate = document.getElementById('fromDate').value;
                     const toDate = document.getElementById('toDate').value;
@@ -687,7 +792,7 @@
                     filteredData = filterDataByDateRange(startDate, endDate);
                     filterDescription = `Custom Range: ${fromDate} to ${toDate}`;
                     break;
-                    
+
                 default:
                     filteredData = [...salesData];
                     filterDescription = 'All Time';
@@ -714,7 +819,7 @@
             document.getElementById('singleDate').style.display = 'none';
             document.getElementById('customDateInputs').classList.remove('show');
             document.getElementById('filterStatus').style.display = 'none';
-            
+
             filteredData = [...salesData];
             hideError();
             processFilteredData();
@@ -723,7 +828,7 @@
         function filterDataByDateRange(startDate, endDate) {
             return salesData.filter(row => {
                 if (!row['Line Item Date']) return false;
-                
+
                 const rowDate = new Date(row['Line Item Date']);
                 return rowDate >= startDate && rowDate <= endDate;
             });
@@ -733,7 +838,7 @@
             // Clean and process the data
             salesData = salesData.filter(row => row['Item Total'] && !isNaN(parseFloat(row['Item Total'])));
             filteredData = [...salesData];
-            
+
             // Generate KPIs and charts
             processFilteredData();
         }
@@ -741,7 +846,7 @@
         function processFilteredData() {
             // Generate KPIs
             generateKPIs();
-            
+
             // Generate charts
             generateCharts();
         }
@@ -756,7 +861,7 @@
             const kpis = [
                 {
                     label: 'Total Revenue',
-                    value: '$' + totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}),
+                    value: '$' + totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                     growth: '+12.5%',
                     positive: true
                 },
@@ -815,7 +920,7 @@
 
             // Category Sales Chart
             const categoryData = groupBy(filteredData, 'Item Name');
-            const topCategories = Object.entries(categoryData)
+            const topLabels = Object.entries(categoryData)
                 .map(([name, items]) => ({
                     name: name.substring(0, 20) + (name.length > 20 ? '...' : ''),
                     revenue: items.reduce((sum, item) => sum + parseFloat(item['Item Total'] || 0), 0)
@@ -823,13 +928,13 @@
                 .sort((a, b) => b.revenue - a.revenue)
                 .slice(0, 8);
 
-            if (topCategories.length > 0) {
+            if (topLabels.length > 0) {
                 charts.categoryChart = new Chart(document.getElementById('categoryChart'), {
                     type: 'doughnut',
                     data: {
-                        labels: topCategories.map(cat => cat.name),
+                        labels: topLabels.map(cat => cat.name),
                         datasets: [{
-                            data: topCategories.map(cat => cat.revenue),
+                            data: topLabels.map(cat => cat.revenue),
                             backgroundColor: [
                                 '#4facfe', '#00f2fe', '#667eea', '#764ba2',
                                 '#f093fb', '#f5576c', '#4ecdc4', '#44a08d'
@@ -892,7 +997,7 @@
                             y: {
                                 beginAtZero: true,
                                 ticks: {
-                                    callback: function(value) {
+                                    callback: function (value) {
                                         return value.toFixed(0);
                                     }
                                 }
@@ -903,14 +1008,14 @@
             }
 
             // Top Products
-            if (topCategories.length > 0) {
+            if (topLabels.length > 0) {
                 charts.productsChart = new Chart(document.getElementById('productsChart'), {
                     type: 'bar',
                     data: {
-                        labels: topCategories.slice(0, 6).map(cat => cat.name),
+                        labels: topLabels.slice(0, 6).map(cat => cat.name),
                         datasets: [{
                             label: 'Revenue',
-                            data: topCategories.slice(0, 6).map(cat => cat.revenue),
+                            data: topLabels.slice(0, 6).map(cat => cat.revenue),
                             backgroundColor: '#667eea',
                             borderRadius: 8
                         }]
@@ -927,7 +1032,7 @@
                             y: {
                                 beginAtZero: true,
                                 ticks: {
-                                    callback: function(value) {
+                                    callback: function (value) {
                                         return value.toFixed(0);
                                     }
                                 }
@@ -1031,8 +1136,8 @@
                             y: {
                                 beginAtZero: true,
                                 ticks: {
-                                    callback: function(value) {
-                                        return  value.toFixed(0); 
+                                    callback: function (value) {
+                                        return value.toFixed(0);
                                     }
                                 }
                             }
@@ -1068,4 +1173,5 @@
         }
     </script>
 </body>
+
 </html>

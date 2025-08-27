@@ -6,23 +6,23 @@
 #     print(f"Processing revenue files for category: {category}")
 #     print("Master Columns:", master_df.columns.tolist())
 #     print("Sales Columns:", sales_df.columns.tolist())
-#     # category_df = master_df[master_df['Categories'].str.lower() == category.lower()]
+#     # category_df = master_df[master_df['Printer Labels'].str.lower() == category.lower()]
    
 
 #     # Split input category string into list and normalize to lowercase
-#     categories = [c.strip().lower() for c in category.split(',')]
+#     Printer Labels = [c.strip().lower() for c in category.split(',')]
 
-#     print(f"Filtering for categories: {categories}")
+#     print(f"Filtering for Printer Labels: {Printer Labels}")
 
-#     if 'Categories' not in master_df.columns:
-#         raise ValueError("Missing 'Categories' column in master Excel file")
+#     if 'Printer Labels' not in master_df.columns:
+#         raise ValueError("Missing 'Printer Labels' column in master Excel file")
 
-#     # Ensure 'Categories' column is string
-#     master_df['Categories'] = master_df['Categories'].astype(str)
+#     # Ensure 'Printer Labels' column is string
+#     master_df['Printer Labels'] = master_df['Printer Labels'].astype(str)
 
-#     # Filter rows where any category is found in the 'Categories' string
-#     category_df = master_df[master_df['Categories'].str.lower().apply(
-#         lambda cell: any(cat in cell for cat in categories)
+#     # Filter rows where any category is found in the 'Printer Labels' string
+#     category_df = master_df[master_df['Printer Labels'].str.lower().apply(
+#         lambda cell: any(cat in cell for cat in Printer Labels)
 #     )]
 
 #     print(f"Filtered master data: {len(category_df)} rows matched.")
@@ -75,14 +75,14 @@ def process_revenue_files(sales_df: pd.DataFrame, df: pd.DataFrame, category: st
         for idx in empty_clover.index:
             if idx > 0:
                 prev_idx = idx - 1
-                current_category = df.loc[idx, 'Categories']
+                current_category = df.loc[idx, 'Printer Labels']
                 if current_category:
-                    prev_category = df.loc[prev_idx, 'Categories']
+                    prev_category = df.loc[prev_idx, 'Printer Labels']
                     if prev_category:
-                        df.loc[prev_idx, 'Categories'] = prev_category + ',' + current_category
+                        df.loc[prev_idx, 'Printer Labels'] = prev_category + ',' + current_category
                     else:
-                        df.loc[prev_idx, 'Categories'] = current_category
-        print("Finished updating categories in previous records.")
+                        df.loc[prev_idx, 'Printer Labels'] = current_category
+        print("Finished updating Printer Labels in previous records.")
 
     # Drop records with empty Clover ID
     final_df = df[df['Clover ID'] != '']
@@ -92,13 +92,13 @@ def process_revenue_files(sales_df: pd.DataFrame, df: pd.DataFrame, category: st
     df = final_df
 
     # Now continue with category-based revenue matching
-    categories = [c.strip().lower() for c in category.split(',')]
-    print(f"Filtering for categories: {categories}")
+    Printer_Labels = [c.strip().lower() for c in category.split(',')]
+    print(f"Filtering for Printer Labels: {Printer_Labels}")
 
-    final_df['Categories'] = final_df['Categories'].astype(str)
+    final_df['Printer Labels'] = final_df['Printer Labels'].astype(str)
 
-    category_df = final_df[final_df['Categories'].str.lower().apply(
-        lambda cell: any(cat in cell for cat in categories)
+    category_df = final_df[final_df['Printer Labels'].str.lower().apply(
+        lambda cell: any(cat in cell for cat in Printer_Labels)
     )]
 
     print(f"Filtered master data: {len(category_df)} rows matched.")
@@ -154,6 +154,95 @@ def process_revenue_files(sales_df: pd.DataFrame, df: pd.DataFrame, category: st
     #     "total_revenue": round(total_revenue, 2),
     #     "total_discount": round(total_discount, 2)
     # }
+
+
+def analyzeRevenueOfAllPrinterLabels(sales_df: pd.DataFrame, df: pd.DataFrame) -> dict:
+    print("Processing revenue files for all Printer Labels")
+
+    df = df.fillna('')  # Replace NaN with empty string
+    print(f"Original 'Items' sheet shape: {df.shape}")
+
+    # Find records with empty Clover ID
+    empty_clover = df[df['Clover ID'] == '']
+    if not empty_clover.empty:
+        print(f"\nFound {len(empty_clover)} records with empty Clover ID")
+        for idx in empty_clover.index:
+            if idx > 0:
+                prev_idx = idx - 1
+                current_category = df.loc[idx, 'Printer Labels']
+                if current_category:
+                    prev_category = df.loc[prev_idx, 'Printer Labels']
+                    if prev_category:
+                        df.loc[prev_idx, 'Printer Labels'] = prev_category + ',' + current_category
+                    else:
+                        df.loc[prev_idx, 'Printer Labels'] = current_category
+        print("Finished updating Printer Labels in previous records.")
+
+    # Drop records with empty Clover ID
+    final_df = df[df['Clover ID'] != '']
+    print(f"Cleaned 'Items' sheet shape: {final_df.shape}")
+
+    final_df['Printer Labels'] = final_df['Printer Labels'].astype(str)
+
+    # 🔹 Get all unique Printer Labels
+    all_labels = set()
+    for cell in final_df['Printer Labels']:
+        if cell:
+            for lbl in cell.split(","):
+                all_labels.add(lbl.strip().lower())
+
+    print(f"Found {len(all_labels)} unique Printer Labels")
+
+    # 🔹 Build response for each Printer Label
+    results = {}
+    for label in all_labels:
+        label_df = final_df[final_df['Printer Labels'].str.lower().apply(
+            lambda cell: label in cell
+        )]
+
+        category_skus = label_df['SKU'].dropna().astype(str).unique().tolist()
+        category_codes = label_df[label_df['SKU'] == '']['Product Code'].dropna().astype(str).unique().tolist()
+
+        sales_df['ItemIdentifier'] = sales_df['Item SKU'].fillna(sales_df['Item Product Code']).astype(str)
+
+        matched_sales = sales_df[sales_df['ItemIdentifier'].isin(category_skus + category_codes)]
+        matched_sales_item_from_inventory = label_df[label_df['SKU'].isin(matched_sales['ItemIdentifier'])]
+
+        total_revenue = matched_sales['Total Revenue'].sum()
+        total_discount = matched_sales['Total Discount'].sum()
+
+        sold_items = []
+        for _, row in matched_sales.iterrows():
+            vendor_price = 0.0
+            for _, item_row in matched_sales_item_from_inventory.iterrows():
+                if row['ItemIdentifier'] == item_row['SKU']:
+                    vendor_price = item_row.get('Cost', '0')
+                    break
+            item = {
+                "item_identifier": row.get("ItemIdentifier", ""),
+                "item_name": row.get("Item Name", ""),
+                "price": float(row.get("Item Total with Tax/Fee Amount", 0)),
+                "vendor_price": safe_float(vendor_price),
+                "revenue": float(row.get("Total Revenue", 0)),
+                "date": row.get("Line Item Date", "")
+            }
+            sold_items.append(item)
+
+        total_price = sum(item['price'] for item in sold_items)
+        total_cost = sum(float(item['vendor_price']) for item in sold_items)
+
+        results[label] = {
+            "category": label,
+            "total_items_sold": len(matched_sales),
+            "total_revenue": round(total_revenue, 2),
+            "total_discount": round(total_discount, 2),
+            "total_price": round(total_price, 2),
+            "total_cost": round(total_cost, 2),
+            # "sold_items": sold_items
+        }
+
+    return results
+
 
 def safe_float(val):
     try:

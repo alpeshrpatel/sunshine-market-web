@@ -1,7 +1,7 @@
 
 
 from fastapi import APIRouter, UploadFile, File, Form
-from app.api.controllers.revenue_analyzer_controller import analyzeRevenue
+from app.api.controllers.revenue_analyzer_controller import analyzeRevenue, analyzeRevenueOfAllLabels
 
 router = APIRouter()
 
@@ -17,3 +17,10 @@ async def analyze_revenue_and_discount(
 ):
     return await analyzeRevenue(csv_file, excel_file, category)
 
+
+@router.post("/analyze/all/labels")
+async def analyze_revenue_all_labels(
+    csv_file: UploadFile = File(...),
+    excel_file: UploadFile = File(None),
+):
+    return await analyzeRevenueOfAllLabels(csv_file, excel_file)
