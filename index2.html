@@ -5,41 +5,291 @@
     <meta charset="UTF-8">
     <title>Data Uploader</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        
+        .upload-info {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .filters-section {
+            padding: 25px 30px;
+            background: white;
+            border-bottom: 1px solid #e0e6ff;
+            display: none;
+        }
+
+        .filters-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 10px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background: white;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .filter-select:focus,
+        .filter-input:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .custom-date-inputs {
+            display: none;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .custom-date-inputs.show {
+            display: flex;
+        }
+
+        .date-separator {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .apply-filter-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .apply-filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .reset-filter-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .reset-filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .filter-status {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            color: #0284c7;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        /* Pagination Styles */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .pagination-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .rows-per-page {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rows-per-page select {
+            padding: 8px 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pagination-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            min-width: 44px;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .pagination-btn:disabled {
+            background: #e2e8f0;
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .page-numbers {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .page-ellipsis {
+            color: #666;
+            font-weight: 600;
+            padding: 0 5px;
+        }
+
+        .current-page-info {
+            background: #f8fafc;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .pagination-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .pagination-controls {
+                justify-content: center;
+            }
+            
+            .pagination-info {
+                justify-content: center;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 
 <body
     style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(to right, #e0eafc, #cfdef3);">
 
     <div
-        style="max-width: 600px; margin: 40px auto; background-color: white; padding: 30px 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
-         <div style="text-align: center; color: #2c3e50; font-size: 24px; margin-bottom: 25px;">
-                 <a href="/vendor_choice.html"
-                style="font-size:14px; margin-left:20px; color:#007bff; text-decoration:none;">Go to Vendor Invoice
-                Upload</a>
-                <a href="/sales_analytics.html"
-                style="font-size:14px; margin-left:20px; color:#007bff; text-decoration:none;">Dashboard
-                </a>
+        style="max-width: 1200px; margin: 40px auto; background-color: white; padding: 30px 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+          <div style="display: block;">
+            <button class="apply-filter-btn" onclick="history.back()"> ← Back to Upload</button>
+            <div class="filters-container" style="margin-top: 20px;">
+                <div class="filter-group">
+                    <label class="filter-label">Date Filter</label>
+                    <select id="dateFilter" class="filter-select" onchange="handleDateFilterChange()">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="this_week">This Week</option>
+                        <option value="last_15">Last 15 Days</option>
+                        <option value="last_30">Last 30 Days</option>
+                        <option value="last_45">Last 45 Days</option>
+                        <option value="last_60">Last 60 Days</option>
+                        <option value="last_90">Last 90 Days</option>
+                        <option value="single_date">Single Date</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Single Date</label>
+                    <input type="date" id="singleDate" class="filter-input" style="display: none;">
+                </div>
+
+                <div class="custom-date-inputs" id="customDateInputs">
+                    <div class="filter-group">
+                        <label class="filter-label">From Date</label>
+                        <input type="date" id="fromDate" class="filter-input">
+                    </div>
+                    <span class="date-separator">to</span>
+                    <div class="filter-group">
+                        <label class="filter-label">To Date</label>
+                        <input type="date" id="toDate" class="filter-input">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="applyFilter" class="apply-filter-btn">Apply Filter</button>
+                    <button id="resetFilter" class="reset-filter-btn">Reset</button>
+                </div>
+
+                <div class="filter-status" id="filterStatus"></div>
             </div>
+        </div>
         <h2 style="text-align: center; color: #2c3e50; font-size: 24px; margin-bottom: 25px;">
             📤 Upload Your Files & View Data
-           
-           
         </h2>
-
 
         <label for="category"
             style="font-weight: 600; display: block; margin-bottom: 6px; color: #333;">Category:</label>
         <input id="category" type="text" placeholder="Enter category"
             style="width: 100%; padding: 12px; margin-bottom: 18px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
-
-        <label for="csvFile" style="font-weight: 600; display: block; margin-bottom: 6px; color: #333;">CSV
-            File:</label>
-        <input id="csvFile" type="file" accept=".csv" style="margin-bottom: 18px; width: 100%; font-size: 14px;">
-
-        <label for="excelFile" style="font-weight: 600; display: block; margin-bottom: 6px; color: #333;">Excel File
-            (optional):</label>
-        <input id="excelFile" type="file" accept=".xlsx, .xls"
-            style="margin-bottom: 25px; width: 100%; font-size: 14px;">
 
         <button onclick="submitForm()"
             style="width: 100%; background: linear-gradient(to right, #667eea, #764ba2); color: white; border: none; padding: 14px; font-size: 16px; font-weight: 600; border-radius: 10px; cursor: pointer; transition: 0.3s;">
@@ -48,12 +298,112 @@
 
         <div id="result" style="margin-top: 30px;"></div>
     </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script>
+         let salesData = [];
+        let filteredData = [];
+        let charts = {};
+        let originalData = [];
+        let currentDisplayedData = []; // Track currently displayed data for filtering
+
+        // Pagination variables
+        let currentPage = 1;
+        let rowsPerPage = 10;
+        let totalPages = 1;
+
+         document.getElementById('applyFilter').addEventListener('click', applyFilter);
+        document.getElementById('resetFilter').addEventListener('click', resetFilter);
+       
         async function submitForm() {
+              const allData = await getAllFromIndexedDB();
+            const csvFiles = allData.filter(item => item.fileType === 'csv');
+            const excelFiles = allData.filter(item => item.fileType === 'excel');
+
+            if (csvFiles.length === 0) {
+                showMessage('No CSV file found in database. Please upload a CSV file first.', 'error');
+                return;
+            }
+
+            // Get the latest files
+            const latestCSV = csvFiles.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate))[0];
+            const latestExcel = excelFiles.length > 0 ?
+                excelFiles.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate))[0] : null;
+
+            // Convert stored data back to File objects
+            const csvFile = createFileFromData(latestCSV.fileName, latestCSV.data, 'csv');
+            let excelFile = null;
+
+            if (latestExcel) {
+                try {
+                    // First, let's check what worksheets are available in the Excel file
+                    const tempExcelFile = createFileFromData(latestExcel.fileName, latestExcel.data, 'excel');
+                    const worksheets = await getExcelWorksheets(tempExcelFile);
+
+                    console.log('Available worksheets:', worksheets);
+
+                    // Check if 'Items' worksheet exists
+                    if (worksheets.includes('Items')) {
+                        console.log("'Items' worksheet found!");
+                        // Validate Excel data
+                        const cleanedExcelData = validateAndCleanData(latestExcel.data, 'Excel');
+                        excelFile = createFileFromData(latestExcel.fileName, cleanedExcelData, 'excel', 'Items');
+                        console.log('✅ Excel file validated and cleaned');
+                    } else {
+                        // Show available worksheets to user and ask them to choose
+                        const availableSheets = worksheets.join(', ');
+                        console.log(`'Items' worksheet not found. Available worksheets: ${availableSheets}`);
+
+                        // Try common alternative names for items/products
+                        const commonItemsNames = ['Items', 'Products', 'Inventory', 'Stock', 'Sheet1', 'Data'];
+                        let foundWorksheet = null;
+
+                        for (const name of commonItemsNames) {
+                            if (worksheets.includes(name)) {
+                                foundWorksheet = name;
+                                break;
+                            }
+                        }
+
+                        if (foundWorksheet) {
+                            console.log(`Using worksheet: ${foundWorksheet}`);
+                            const cleanedExcelData = validateAndCleanData(latestExcel.data, 'Excel');
+                            excelFile = createFileFromData(latestExcel.fileName, cleanedExcelData, 'excel', foundWorksheet);
+                            console.log('✅ Excel file validated and cleaned');
+                        } else {
+                            // Let user choose worksheet
+                            const userChoice = prompt(`The 'Items' worksheet was not found.\nAvailable worksheets: ${availableSheets}\n\nPlease enter the name of the worksheet you want to use:`);
+
+                            if (userChoice && worksheets.includes(userChoice)) {
+                                const cleanedExcelData = validateAndCleanData(latestExcel.data, 'Excel');
+                                excelFile = createFileFromData(latestExcel.fileName, cleanedExcelData, 'excel', userChoice);
+                                console.log('✅ Excel file validated and cleaned');
+                            } else {
+                                console.log(`Worksheet '${userChoice}' not found. Proceeding without Excel file.`);
+                                excelFile = null;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error processing Excel file:', error);
+                    alert(`Error processing Excel file: ${error.message}\nProceeding with CSV only.`);
+                    excelFile = null;
+                }
+            }
+
+            if (!csvFile) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('csv_file', csvFile);
+            if (excelFile) {
+                formData.append('excel_file', excelFile);
+            }
+
             const category = document.getElementById('category').value;
-            const csvFile = document.getElementById('csvFile').files[0];
-            const excelFile = document.getElementById('excelFile').files[0];
             const resultDiv = document.getElementById('result');
 
             if (!csvFile) {
@@ -61,15 +411,13 @@
                 return;
             }
 
-            const formData = new FormData();
             formData.append("category", category);
-            formData.append("csv_file", csvFile);
             if (excelFile) formData.append("excel_file", excelFile);
 
             resultDiv.innerHTML = "<p style='text-align:center; color:#555;'>⏳ Processing...</p>";
 
             try {
-                const response = await fetch(`https://sunshinemarket.shop/api/revenue/revenue-analyze?category=${formData.category}`, {
+                const response = await fetch(`https://sunshinemarket.shop/api/revenue/revenue-analyze?category=${category}`, {
                     method: "POST",
                     body: formData
                 });
@@ -77,49 +425,30 @@
                 const data = await response.json();
 
                 if (data.sold_items && Array.isArray(data.sold_items) && data.sold_items.length > 0) {
-                    let table = '<div style="overflow-x:auto;">';
-                    table += '<table style="width:100%; border-collapse: collapse; margin-top: 20px; background: #fefefe; border-radius: 8px;">';
-
-                    // Table header
-                    table += `
-    <tr style="background-color: #6a11cb; background-image: linear-gradient(315deg, #6a11cb 0%, #2575fc 74%); color: white;">
-      <th style="padding: 12px; border: 1px solid #ddd;">Item Identifier</th>
-      <th style="padding: 12px; border: 1px solid #ddd;">Item Name</th>
-      <th style="padding: 12px; border: 1px solid #ddd;">Customer Price</th>
-      <th style="padding: 12px; border: 1px solid #ddd;">Vendor Price</th>
- 
-      <th style="padding: 12px; border: 1px solid #ddd;">Revenue</th>
-      <th style="padding: 12px; border: 1px solid #ddd;">Date</th>
-
-    </tr>
-  `;
-
-                    // Table rows
-                    data.sold_items.forEach((item, index) => {
-                        table += `
-      <tr style="background-color: ${index % 2 === 0 ? '#f9f9f9' : '#ffffff'};">
-        <td style="padding: 10px; border: 1px solid #ddd;">${item.item_identifier}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">${item.item_name}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">$${item.price.toFixed(2)}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">$${item.vendor_price}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">$${item.revenue.toFixed(2)}</td>
-         <td style="padding: 10px; border: 1px solid #ddd;">${item.date}</td>
-      </tr>
-    `;
+                    // Store the original data globally for filtering
+                    salesData = [...data.sold_items];
+                    currentDisplayedData = [...data.sold_items];
+                    originalData = { ...data };
+                    
+                    // Reset pagination when new data is loaded
+                    currentPage = 1;
+                    
+                    console.log('Data stored for filtering:', {
+                        salesDataLength: salesData.length,
+                        sampleItem: salesData[0],
+                        dateField: salesData[0]?.date
                     });
-
-                    table += '</table></div>';
-
-
-                    resultDiv.innerHTML = `
-    <h3 style="text-align:center; margin-top:20px;">🧾 Sold Items for Category: <span style="color:#007bff;">${data.category}</span></h3>
-    ${table}
-    <div style="display:flex; flex-direction:column; align-items:center; margin-top:20px;">
-     <p style="margin-top:15px; text-align:center;"><strong>Total Vendor Cost:</strong> $${data.total_cost.toFixed(2)} | <strong>Total Customer Price:</strong> $${data.total_price.toFixed(2)}</p>
-    <p style="margin-top:15px; text-align:center;"><strong>Total Revenue:</strong> $${data.total_revenue.toFixed(2)} | <strong>Total Discount:</strong> $${data.total_discount.toFixed(2)}</p>
-    </div>
-    `;
+                    
+                    // Show filters section now that we have data
+                    const filtersSection = document.querySelector('.filters-container').parentElement;
+                    if (filtersSection) {
+                        filtersSection.style.display = 'block';
+                    }
+                    
+                    // Display the initial table with pagination
+                    displayFilteredResults(data.sold_items, data);
                 } else {
+                    document.querySelector('.filters-container').parentElement.style.display = 'none';
                     resultDiv.innerHTML = `<p style="text-align:center; color:#999;">No sold items found for this category.</p>`;
                 }
             } catch (error) {
@@ -127,6 +456,777 @@
                 resultDiv.innerHTML = `<p style='color: red; text-align:center;'>❗ An error occurred while processing your request.</p>`;
             }
         }
+
+        // Updated function to display filtered results with pagination
+        function displayFilteredResults(items, dataObj) {
+            const resultDiv = document.getElementById('result');
+            
+            console.log('Displaying results for', items.length, 'items');
+            
+            // Calculate pagination
+            totalPages = Math.ceil(items.length / rowsPerPage);
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, items.length);
+            const paginatedItems = items.slice(startIndex, endIndex);
+            
+            // Create pagination controls
+            const paginationHtml = createPaginationControls(items.length);
+            
+            let table = '<div style="overflow-x:auto;">';
+            table += '<table style="width:100%; border-collapse: collapse; margin-top: 20px; background: #fefefe; border-radius: 8px;">';
+
+            // Table header
+            table += `
+    <tr style="background-color: #6a11cb; background-image: linear-gradient(315deg, #6a11cb 0%, #2575fc 74%); color: white;">
+      <th style="padding: 12px; border: 1px solid #ddd;">Item Identifier</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Item Name</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Customer Price</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Vendor Price</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Revenue</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Date</th>
+    </tr>
+  `;
+
+            // Table rows (only showing current page items)
+            paginatedItems.forEach((item, index) => {
+                table += `
+      <tr style="background-color: ${index % 2 === 0 ? '#f9f9f9' : '#ffffff'};">
+        <td style="padding: 10px; border: 1px solid #ddd;">${item.item_identifier || 'N/A'}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${item.item_name || 'N/A'}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${(item.price || 0).toFixed(2)}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${(item.vendor_price || 0)}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${(item.revenue || 0).toFixed(2)}</td>
+         <td style="padding: 10px; border: 1px solid #ddd;">${item.date || 'N/A'}</td>
+      </tr>
+    `;
+            });
+
+            table += '</table></div>';
+
+            // Calculate totals for ALL filtered data (not just current page)
+            const totalCost = items.reduce((sum, item) => sum + parseFloat(item.vendor_price || 0), 0);
+            const totalPrice = items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
+            const totalRevenue = items.reduce((sum, item) => sum + parseFloat(item.revenue || 0), 0);
+            const totalDiscount = totalPrice - totalRevenue;
+
+            resultDiv.innerHTML = `
+    <h3 style="text-align:center; margin-top:20px;">🧾 Sold Items for Category: <span style="color:#007bff;">${dataObj.category || 'All'}</span></h3>
+    
+   
+    
+    ${table}
+    
+    ${paginationHtml}
+    
+    <div style="display:flex; flex-direction:column; align-items:center; margin-top:20px;">
+     <p style="margin-top:15px; text-align:center;"><strong>Total Vendor Cost:</strong> ${totalCost.toFixed(2)} | <strong>Total Customer Price:</strong> ${totalPrice.toFixed(2)}</p>
+    <p style="margin-top:15px; text-align:center;"><strong>Total Revenue:</strong> ${totalRevenue.toFixed(2)} | <strong>Total Discount:</strong> ${totalDiscount.toFixed(2)}</p>
+    <p style="margin-top:10px; text-align:center; color:#666;"><strong>Total Records:</strong> ${items.length} | <strong>Showing:</strong> ${startIndex + 1}-${endIndex}</p>
+    </div>
+    `;
+        }
+
+        // Create pagination controls HTML
+        function createPaginationControls(totalItems) {
+            if (totalItems <= rowsPerPage) {
+                return ''; // No pagination needed
+            }
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, totalItems);
+
+            let paginationHtml = `
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    <div class="rows-per-page">
+                        <label>Rows per page:</label>
+                        <select onchange="changeRowsPerPage(this.value)">
+                            <option value="10" ${rowsPerPage === 10 ? 'selected' : ''}>10</option>
+                            <option value="25" ${rowsPerPage === 25 ? 'selected' : ''}>25</option>
+                            <option value="50" ${rowsPerPage === 50 ? 'selected' : ''}>50</option>
+                            <option value="100" ${rowsPerPage === 100 ? 'selected' : ''}>100</option>
+                        </select>
+                    </div>
+                    <div class="current-page-info">
+                        ${startIndex + 1}-${endIndex} of ${totalItems}
+                    </div>
+                </div>
+                
+                <div class="pagination-controls">
+                    <button class="pagination-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>
+                        ⏮
+                    </button>
+                    <button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                        ◀
+                    </button>
+                    
+                    <div class="page-numbers">
+                        ${generatePageNumbers()}
+                    </div>
+                    
+                    <button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                        ▶
+                    </button>
+                    <button class="pagination-btn" onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>
+                        ⏭
+                    </button>
+                </div>
+            </div>
+            `;
+
+            return paginationHtml;
+        }
+
+        // Generate page numbers with ellipsis for large datasets
+        function generatePageNumbers() {
+            let pageNumbers = '';
+            const maxVisiblePages = 5;
+            
+            if (totalPages <= maxVisiblePages) {
+                // Show all pages if total is small
+                for (let i = 1; i <= totalPages; i++) {
+                    pageNumbers += `
+                        <button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
+                                onclick="goToPage(${i})">
+                            ${i}
+                        </button>
+                    `;
+                }
+            } else {
+                // Show pages with ellipsis for larger datasets
+                if (currentPage <= 3) {
+                    // Show first few pages
+                    for (let i = 1; i <= Math.min(4, totalPages); i++) {
+                        pageNumbers += `
+                            <button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
+                                    onclick="goToPage(${i})">
+                                ${i}
+                            </button>
+                        `;
+                    }
+                    if (totalPages > 4) {
+                        pageNumbers += '<span class="page-ellipsis">...</span>';
+                        pageNumbers += `
+                            <button class="pagination-btn" onclick="goToPage(${totalPages})">
+                                ${totalPages}
+                            </button>
+                        `;
+                    }
+                } else if (currentPage >= totalPages - 2) {
+                    // Show last few pages
+                    pageNumbers += `
+                        <button class="pagination-btn" onclick="goToPage(1)">1</button>
+                    `;
+                    if (totalPages > 4) {
+                        pageNumbers += '<span class="page-ellipsis">...</span>';
+                    }
+                    for (let i = Math.max(totalPages - 3, 1); i <= totalPages; i++) {
+                        pageNumbers += `
+                            <button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
+                                    onclick="goToPage(${i})">
+                                ${i}
+                            </button>
+                        `;
+                    }
+                } else {
+                    // Show middle pages with ellipsis on both sides
+                    pageNumbers += `
+                        <button class="pagination-btn" onclick="goToPage(1)">1</button>
+                        <span class="page-ellipsis">...</span>
+                    `;
+                    for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                        pageNumbers += `
+                            <button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
+                                    onclick="goToPage(${i})">
+                                ${i}
+                            </button>
+                        `;
+                    }
+                    pageNumbers += `
+                        <span class="page-ellipsis">...</span>
+                        <button class="pagination-btn" onclick="goToPage(${totalPages})">
+                            ${totalPages}
+                        </button>
+                    `;
+                }
+            }
+            
+            return pageNumbers;
+        }
+
+        // Navigate to specific page
+        function goToPage(page) {
+            if (page < 1 || page > totalPages || page === currentPage) {
+                return;
+            }
+            
+            currentPage = page;
+            
+            // Re-display current filtered data with new pagination
+            displayFilteredResults(currentDisplayedData, originalData);
+        }
+
+        // Change rows per page
+        function changeRowsPerPage(newRowsPerPage) {
+            rowsPerPage = parseInt(newRowsPerPage);
+            currentPage = 1; // Reset to first page
+            
+            // Re-display current filtered data with new pagination
+            displayFilteredResults(currentDisplayedData, originalData);
+        }
+
+        function validateAndCleanData(data, fileType) {
+            if (!data || data.length === 0) {
+                throw new Error(`No data found in ${fileType} file`);
+            }
+
+            // Check for required columns (add more as needed based on your API requirements)
+            const requiredColumns = ['Clover ID']; // Add other required columns here
+            const firstRow = data[0];
+            const availableColumns = Object.keys(firstRow);
+
+            console.log('Available columns:', availableColumns);
+            console.log('Required columns:', requiredColumns);
+
+            // Check for missing required columns
+            const missingColumns = requiredColumns.filter(col => {
+                // Check for exact match and variations
+                return !availableColumns.some(availCol =>
+                    availCol.toLowerCase().trim() === col.toLowerCase().trim()
+                );
+            });
+
+            if (missingColumns.length > 0) {
+                console.error('Missing required columns:', missingColumns);
+                throw new Error(`Missing required columns: ${missingColumns.join(', ')}\nAvailable columns: ${availableColumns.join(', ')}`);
+            }
+
+            // Clean and standardize column names
+            const cleanedData = data.map(row => {
+                const cleanedRow = {};
+                Object.keys(row).forEach(key => {
+                    // Remove extra whitespace from column names
+                    const cleanKey = key.trim();
+                    // Standardize 'Clover ID' variations
+                    if (cleanKey.toLowerCase().includes('clover') && cleanKey.toLowerCase().includes('id')) {
+                        cleanedRow['Clover ID'] = row[key];
+                    } else {
+                        cleanedRow[cleanKey] = row[key];
+                    }
+                });
+                return cleanedRow;
+            });
+
+            // Validate Clover ID values
+            const invalidCloverIds = cleanedData.filter(row =>
+                !row['Clover ID'] ||
+                row['Clover ID'] === '' ||
+                row['Clover ID'] === null ||
+                row['Clover ID'] === undefined
+            );
+
+            if (invalidCloverIds.length > 0) {
+                console.warn(`Found ${invalidCloverIds.length} rows with missing Clover ID`);
+                // You might want to filter these out or handle them differently
+                return cleanedData.filter(row => row['Clover ID'] && row['Clover ID'] !== '');
+            }
+
+            return cleanedData;
+        }
+
+        function handleDateFilterChange() {
+            const filterValue = document.getElementById('dateFilter').value;
+            const singleDateInput = document.getElementById('singleDate');
+            const customDateInputs = document.getElementById('customDateInputs');
+
+            // Hide all special inputs first
+            singleDateInput.style.display = 'none';
+            customDateInputs.classList.remove('show');
+
+            // Show relevant inputs based on selection
+            if (filterValue === 'single_date') {
+                singleDateInput.style.display = 'block';
+            } else if (filterValue === 'custom') {
+                customDateInputs.classList.add('show');
+            }
+        }
+
+        function applyFilter() {
+            console.log('Applying filter...');
+            
+            // Check if we have data to filter
+            if (!salesData || salesData.length === 0) {
+                alert('No data available to filter. Please submit the form first.');
+                return;
+            }
+            
+            const filterValue = document.getElementById('dateFilter').value;
+            const today = new Date();
+            today.setHours(23, 59, 59, 999); // End of today
+
+            let startDate, endDate;
+            let filterDescription = '';
+
+            switch (filterValue) {
+                case 'all':
+                    filteredData = [...salesData];
+                    filterDescription = 'All Time';
+                    break;
+
+                case 'today':
+                    startDate = new Date(today);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Today';
+                    break;
+
+                case 'this_week':
+                    startDate = new Date(today);
+                    const dayOfWeek = startDate.getDay();
+                    startDate.setDate(startDate.getDate() - dayOfWeek);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'This Week';
+                    break;
+
+                case 'last_15':
+                    startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() - 15);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Last 15 Days';
+                    break;
+
+                case 'last_30':
+                    startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() - 30);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Last 30 Days';
+                    break;
+
+                case 'last_45':
+                    startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() - 45);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Last 45 Days';
+                    break;
+
+                case 'last_60':
+                    startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() - 60);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Last 60 Days';
+                    break;
+
+                case 'last_90':
+                    startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() - 90);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(today);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = 'Last 90 Days';
+                    break;
+
+                case 'single_date':
+                    const singleDate = document.getElementById('singleDate').value;
+                    if (!singleDate) {
+                        alert('Please select a date');
+                        return;
+                    }
+                    startDate = new Date(singleDate);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(singleDate);
+                    endDate.setHours(23, 59, 59, 999);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = `Single Date: ${singleDate}`;
+                    break;
+
+                case 'custom':
+                    const fromDate = document.getElementById('fromDate').value;
+                    const toDate = document.getElementById('toDate').value;
+                    if (!fromDate || !toDate) {
+                        alert('Please select both start and end dates');
+                        return;
+                    }
+                    if (new Date(fromDate) > new Date(toDate)) {
+                        alert('Start date cannot be after end date');
+                        return;
+                    }
+                    startDate = new Date(fromDate);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(toDate);
+                    endDate.setHours(23, 59, 59, 999);
+                    filteredData = filterDataByDateRange(startDate, endDate);
+                    filterDescription = `Custom Range: ${fromDate} to ${toDate}`;
+                    break;
+
+                default:
+                    filteredData = [...salesData];
+                    filterDescription = 'All Time';
+            }
+
+            // Reset to first page when filter is applied
+            currentPage = 1;
+            
+            // Update filter status
+            const filterStatus = document.getElementById('filterStatus');
+            if (filterValue !== 'all') {
+                filterStatus.textContent = `Filtered by: ${filterDescription} (${filteredData.length} records)`;
+                filterStatus.style.display = 'inline-block';
+            } else {
+                filterStatus.style.display = 'none';
+            }
+
+            // Update the displayed table with filtered data
+            currentDisplayedData = [...filteredData];
+            displayFilteredResults(filteredData, originalData);
+        }
+
+        function resetFilter() {
+            document.getElementById('dateFilter').value = 'all';
+            document.getElementById('singleDate').value = '';
+            document.getElementById('fromDate').value = '';
+            document.getElementById('toDate').value = '';
+            document.getElementById('singleDate').style.display = 'none';
+            document.getElementById('customDateInputs').classList.remove('show');
+            document.getElementById('filterStatus').style.display = 'none';
+
+            // Reset pagination
+            currentPage = 1;
+            filteredData = [...salesData];
+            currentDisplayedData = [...salesData];
+            
+            // Update the displayed table with all data
+            if (originalData && originalData.sold_items) {
+                displayFilteredResults(salesData, originalData);
+            }
+        }
+
+        function filterDataByDateRange(startDate, endDate) {
+            console.log('Filtering data from', startDate, 'to', endDate);
+            console.log('Original salesData length:', salesData.length);
+            
+            const filtered = salesData.filter(row => {
+                // Check the actual date field from your API response
+                const dateValue = row.date; // Based on your API response structure
+                
+                if (!dateValue) {
+                    console.warn('No date value found for row:', row);
+                    return false;
+                }
+
+                // Parse the date - handle various date formats
+                let rowDate;
+                try {
+                    // Handle different date formats that might come from API
+                    if (typeof dateValue === 'string') {
+                        rowDate = new Date(dateValue);
+                    } else {
+                        rowDate = new Date(dateValue);
+                    }
+                    
+                    // Check if the date is valid
+                    if (isNaN(rowDate.getTime())) {
+                        console.warn('Invalid date found:', dateValue);
+                        return false;
+                    }
+                } catch (error) {
+                    console.warn('Error parsing date:', dateValue, error);
+                    return false;
+                }
+
+                const isInRange = rowDate >= startDate && rowDate <= endDate;
+                if (isInRange) {
+                    console.log('Date in range:', dateValue, rowDate);
+                }
+                return isInRange;
+            });
+            
+            console.log('Filtered data length:', filtered.length);
+            return filtered;
+        }
+
+        async function uploadAndAnalyze() {
+            const allData = await getAllFromIndexedDB();
+            const csvFiles = allData.filter(item => item.fileType === 'csv');
+            const excelFiles = allData.filter(item => item.fileType === 'excel');
+
+            if (csvFiles.length === 0) {
+                showMessage('No CSV file found in database. Please upload a CSV file first.', 'error');
+                return;
+            }
+
+            // Get the latest files
+            const latestCSV = csvFiles.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate))[0];
+            const latestExcel = excelFiles.length > 0 ?
+                excelFiles.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate))[0] : null;
+
+            const csvFile = document.getElementById('csvFile').files[0];
+            const excelFile = document.getElementById('excelFile').files[0];
+
+            if (!csvFile) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            // Show loading indicator
+            const uploadBtn = document.querySelector('.upload-btn');
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Processing...';
+
+            const formData = new FormData();
+            formData.append('csv_file', csvFile);
+            if (excelFile) {
+                formData.append('excel_file', excelFile);
+            }
+
+            try {
+                console.log('Uploading files to API...');
+                const response = await fetch('https://sunshinemarket.shop/api/revenue/analyze/all/labels', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (response.ok) {
+                    const responseText = await response.text();
+                    console.log('Raw response length:', responseText.length);
+                    console.log('Raw response (first 500 chars):', responseText.substring(0, 500));
+                    console.log('Response content type:', response.headers.get('content-type'));
+
+                    // Check if response is empty
+                    if (!responseText.trim()) {
+                        throw new Error('Empty response from server');
+                    }
+
+                    try {
+                        const data = JSON.parse(responseText);
+                        console.log('Parsed data successfully!');
+                        console.log('Full parsed data:', JSON.stringify(data, null, 2));
+                        console.log('Data type:', typeof data);
+                        console.log('Data keys:', Object.keys(data));
+
+                        // Check if data has the expected structure
+                        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                            // Validate that the data has the expected category structure
+                            const firstKey = Object.keys(data)[0];
+                            const firstItem = data[firstKey];
+
+                            console.log('First category:', firstKey);
+                            console.log('First item structure:', firstItem);
+
+                            if (firstItem && typeof firstItem === 'object' &&
+                                firstItem.hasOwnProperty('total_revenue') &&
+                                firstItem.hasOwnProperty('total_items_sold')) {
+
+                                loadDashboard(data);
+                                alert('Data loaded successfully!');
+                                return; // Exit successfully
+                            } else {
+                                console.warn('Data structure does not match expected format');
+                                console.log('Expected properties: total_revenue, total_items_sold, total_cost, etc.');
+                                console.log('Actual properties:', Object.keys(firstItem || {}));
+                            }
+                        }
+
+                        // If we get here, the data structure is unexpected
+                        throw new Error('Data structure does not match expected format');
+
+                    } catch (parseError) {
+                        console.error('JSON parsing error:', parseError);
+                        console.error('Error name:', parseError.name);
+                        console.error('Error message:', parseError.message);
+
+                        // Show more of the response if it's not too long
+                        const preview = responseText.length > 1000 ?
+                            responseText.substring(0, 1000) + '...' : responseText;
+                        console.error('Failed to parse response:', preview);
+
+                        throw new Error(`JSON parsing failed: ${parseError.message}`);
+                    }
+                } else {
+                    const errorText = await response.text();
+                    console.error('API Error Response:', errorText);
+                    throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Upload Error:', error);
+                alert(`Error: ${error.message}\n\nUsing sample data for demonstration.`);
+                loadDashboard(sampleData);
+            } finally {
+                // Reset button state
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Analyze Revenue Data';
+            }
+        }
+
+        // Convert data back to File object for API calls
+        function createFileFromData(fileName, data, fileType, worksheetName = 'Items') {
+            let content, mimeType;
+
+            if (fileType === 'csv') {
+                // Convert JSON back to CSV format
+                if (data.length > 0) {
+                    const headers = Object.keys(data[0]);
+                    const csvContent = [
+                        headers.join(','),
+                        ...data.map(row => headers.map(header => {
+                            const value = row[header];
+                            // Escape commas and quotes in CSV values
+                            if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                                return `"${value.replace(/"/g, '""')}"`;
+                            }
+                            return value;
+                        }).join(','))
+                    ].join('\n');
+                    content = csvContent;
+                    mimeType = 'text/csv';
+                } else {
+                    content = '';
+                    mimeType = 'text/csv';
+                }
+            } else if (fileType === 'excel') {
+                // Convert JSON back to Excel format using SheetJS
+                if (typeof XLSX === 'undefined') {
+                    console.error('XLSX library not loaded. Cannot create Excel file.');
+                    throw new Error('XLSX library not available for Excel file creation');
+                }
+
+                // Convert JSON back to Excel format using SheetJS
+                try {
+                    const ws = XLSX.utils.json_to_sheet(data || []);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Instructions & Glossary');
+                    XLSX.utils.book_append_sheet(wb, ws, worksheetName);
+                    const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+                    content = new Uint8Array(excelBuffer);
+                    mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                } catch (error) {
+                    console.error('Error creating Excel file:', error);
+                    throw new Error('Failed to create Excel file: ' + error.message);
+                }
+            }
+
+            const blob = new Blob([content], { type: mimeType });
+            return new File([blob], fileName, { type: mimeType });
+        }
+
+        async function storeExcelDataWithWorksheets(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+
+                        // Store data for each worksheet separately
+                        const worksheetData = {};
+                        workbook.SheetNames.forEach(sheetName => {
+                            const worksheet = workbook.Sheets[sheetName];
+                            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                            worksheetData[sheetName] = jsonData;
+                        });
+
+                        console.log('Extracted worksheets:', Object.keys(worksheetData));
+                        console.log('Items worksheet data sample:', worksheetData['Items'] ? worksheetData['Items'].slice(0, 2) : 'Not found');
+
+                        resolve(worksheetData);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = () => reject(reader.error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        async function getExcelWorksheets(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        resolve(workbook.SheetNames);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = () => reject(reader.error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function showMessage(message, type) {
+            // Simple message display function
+            const resultDiv = document.getElementById('result');
+            const color = type === 'error' ? 'red' : 'green';
+            resultDiv.innerHTML = `<p style='color: ${color}; text-align:center;'>${message}</p>`;
+        }
+        
+        const DB_NAME = 'AnalyticsDashboard';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'dataFiles';
+
+        let db = null;
+
+        // Initialize IndexedDB
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('fileName', 'fileName', { unique: false });
+                        store.createIndex('fileType', 'fileType', { unique: false });
+                        store.createIndex('uploadDate', 'uploadDate', { unique: false });
+                    }
+                };
+            });
+        }
+
+        async function getAllFromIndexedDB() {
+            if (!db) await initDB();
+
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+            });
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initDB();
+            
+            // Initially hide the filters until data is loaded
+            const filtersContainer = document.querySelector('.filters-container').parentElement;
+            if (filtersContainer) {
+                filtersContainer.style.display = 'none';
+            }
+        });
     </script>
 
 </body>

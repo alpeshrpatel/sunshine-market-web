@@ -411,10 +411,10 @@
     <div class="container">
         <div class="header">
             <h1>📊 Sales Analytics Dashboard</h1>
-            <p>Upload your CSV file to visualize comprehensive sales data</p>
+            <!-- <p>Upload your CSV file to visualize comprehensive sales data</p> -->
         </div>
 
-        <div class="upload-section">
+        <!-- <div class="upload-section">
             <div class="upload-container">
                 <div class="file-input-wrapper">
                     <input type="file" id="csvFile" class="file-input" accept=".csv" />
@@ -430,9 +430,11 @@
                     <small>Supported format: CSV files with sales transaction data</small>
                 </div>
             </div>
-        </div>
+        </div> -->
+
 
         <div class="filters-section" id="filtersSection">
+            <button class="apply-filter-btn" onclick="history.back()"> ← Back to Upload</button>
             <div class="filters-container">
                 <div class="filter-group">
                     <label class="filter-label">Date Filter</label>
@@ -541,17 +543,62 @@
         let originalData = [];
 
         // Initialize event listeners
-        document.getElementById('csvFile').addEventListener('change', handleFileUpload);
+
         document.getElementById('dateFilter').addEventListener('change', handleDateFilterChange);
-        document.getElementById('applyFilter').addEventListener('click', applyFilter);
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('applyFilter').addEventListener('click', applyFilter);
+        });
         document.getElementById('resetFilter').addEventListener('click', resetFilter);
-        document.getElementById('clearStorageBtn').addEventListener('click', clearStoredCSV);
+
 
         /* ------------------------------
       IndexedDB Helpers
    -------------------------------*/
+
+        const DB_NAME = 'AnalyticsDashboard';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'dataFiles';
+
+        let db = null;
+
+        // Initialize IndexedDB
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('fileName', 'fileName', { unique: false });
+                        store.createIndex('fileType', 'fileType', { unique: false });
+                        store.createIndex('uploadDate', 'uploadDate', { unique: false });
+                    }
+                };
+            });
+        }
+
+        async function getAllFromIndexedDB() {
+            if (!db) await initDB();
+
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+            });
+        }
+
         function openDB(callback) {
-            const request = indexedDB.open("CSVStorageDB", 1);
+            const request = indexedDB.open("AnalyticsDashboard", 1);
 
             request.onupgradeneeded = function (e) {
                 const db = e.target.result;
@@ -578,20 +625,41 @@
             });
         }
 
+
+
         function loadCSVfromIndexedDB(callback) {
             openDB((db) => {
-                const tx = db.transaction("csv", "readonly");
-                const store = tx.objectStore("csv");
-                const getReq = store.get("csvData");
+                const tx = db.transaction("dataFiles", "readonly");
+                const store = tx.objectStore("dataFiles");
 
-                getReq.onsuccess = function () {
-                    if (getReq.result) {
-                        callback(getReq.result.data);
+                // Get all records to see what's actually there
+                const getAllRequest = store.getAll();
+
+                getAllRequest.onsuccess = function () {
+                    console.log("All stored data:", getAllRequest.result);
+
+                    // Find the CSV file
+                    const csvFile = getAllRequest.result.find(item =>
+                        item.fileType === 'text/csv' ||
+                        item.fileName?.endsWith('.csv')
+                    );
+
+                    if (csvFile) {
+                        console.log("Found CSV file:", csvFile);
+                        // Access the actual data property (might be 'content', 'fileData', etc.)
+                        callback(csvFile.content || csvFile.fileData || csvFile.data);
+                    } else {
+                        console.log("No CSV data found in IndexedDB");
+                        callback(null);
                     }
+                };
+
+                getAllRequest.onerror = function () {
+                    console.error('Error loading data:', getAllRequest.error);
+                    callback(null);
                 };
             });
         }
-
         function clearStoredCSV() {
             openDB((db) => {
                 const tx = db.transaction("csv", "readwrite");
@@ -684,6 +752,7 @@
         }
 
         function applyFilter() {
+            console.log("Applying filter...");
             const filterValue = document.getElementById('dateFilter').value;
             const today = new Date();
             today.setHours(23, 59, 59, 999); // End of today

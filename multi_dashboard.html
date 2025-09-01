@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .navigation {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .nav-tab {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-tab:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-tab.active {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .upload-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .upload-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 1.8em;
+            font-weight: 300;
+        }
+
+        .file-inputs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .file-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .file-name {
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #666;
+            font-size: 0.9em;
+            text-align: center;
+            border: 2px dashed #ddd;
+        }
+
+        .file-name.selected {
+            background: #e8f5e8;
+            color: #28a745;
+            border-color: #28a745;
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            text-decoration: none;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+        }
+
+        .clear-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .db-btn {
+            background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+            color: white;
+        }
+
+        .db-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(111, 66, 193, 0.4);
+        }
+
+        .success-message, .error-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .db-info {
+            background: rgba(111, 66, 193, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(111, 66, 193, 0.3);
+        }
+
+        .db-info h3 {
+            color: #6f42c1;
+            margin-bottom: 15px;
+        }
+
+        .db-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #6f42c1;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .upload-section {
+                padding: 20px;
+            }
+            
+            .file-inputs-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .upload-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Analytics Dashboard Platform</h1>
+            <p>Upload your data files and explore comprehensive analytics</p>
+        </div>
+
+        
+
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-container">
+                <h2 class="upload-title">Upload Your Data Files</h2>
+                
+                <div class="file-inputs-grid">
+                    <div class="file-input-group">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="csvFile" class="file-input" accept=".csv" />
+                            <label for="csvFile" class="file-input-label" id="csvLabel">
+                                Choose CSV File
+                            </label>
+                        </div>
+                        <div class="file-name" id="csvFileName">No file selected</div>
+                    </div>
+                    
+                    <div class="file-input-group">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="excelFile" class="file-input" accept=".xlsx,.xls" />
+                            <label for="excelFile" class="file-input-label" id="excelLabel">
+                                Choose Excel File
+                            </label>
+                        </div>
+                        <div class="file-name" id="excelFileName">No file selected</div>
+                    </div>
+                </div>
+                <div class="navigation" id="navigation">
+            <div class="nav-tabs">
+                <button id="uploadBtn" style="text-decoration: none;" class="action-btn upload-btn" onclick="switchDashboard('sales')"> <a href="/sales_analytics.html" style="text-decoration: none; color:#fff"> Sales Analytics </a></button>
+                <button id="uploadBtn" style="text-decoration: none;" class="action-btn upload-btn" onclick="switchDashboard('revenue')"> <a href="/analytics_by_label.html" style="text-decoration: none; color:#fff"> Revenue Analytics </a></button>
+                 <button id="uploadBtn" style="text-decoration: none;" class="action-btn upload-btn" onclick="switchDashboard('individual category')"> <a href="/index2.html" style="text-decoration: none; color:#fff"> Category Label Sales </a></button>
+            </div>
+        </div>
+
+                <div class="upload-actions">
+                    <button id="uploadBtn" class="action-btn upload-btn" onclick="processFiles()">
+                        Process Files
+                    </button>
+                    <button id="clearBtn" class="action-btn clear-btn" onclick="clearFiles()">
+                        Clear Files
+                    </button>
+                    <button id="cleanDbBtn" class="action-btn db-btn" onclick="cleanIndexedDB()">
+                        Clean Database
+                    </button>
+                </div>
+
+                <div class="success-message" id="successMessage"></div>
+                <div class="error-message" id="errorMessage"></div>
+
+                <div class="db-info" id="dbInfo" style="display: none;">
+                    <h3>Database Information</h3>
+                    <div class="db-stats" id="dbStats">
+                        <!-- Stats will be populated here -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IndexedDB configuration
+        const DB_NAME = 'AnalyticsDashboard';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'dataFiles';
+
+        let db = null;
+
+        // Initialize IndexedDB
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('fileName', 'fileName', { unique: false });
+                        store.createIndex('fileType', 'fileType', { unique: false });
+                        store.createIndex('uploadDate', 'uploadDate', { unique: false });
+                    }
+                };
+            });
+        }
+       
+        // Save data to IndexedDB
+        async function saveToIndexedDB(fileName, fileType, data, originalFile) {
+            if (!db) await initDB();
+
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+
+                const fileData = {
+                    fileName: fileName,
+                    fileType: fileType,
+                    data: data,
+                    uploadDate: new Date().toISOString(),
+                    size: originalFile.size,
+                    originalName: originalFile.name
+                };
+
+                const request = store.add(fileData);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+            });
+        }
+
+        // Get all data from IndexedDB
+        async function getAllFromIndexedDB() {
+            if (!db) await initDB();
+
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+            });
+        }
+
+        // Clean IndexedDB
+        async function cleanIndexedDB() {
+            if (!db) await initDB();
+
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.clear();
+
+                request.onsuccess = () => {
+                    showMessage('Database cleaned successfully!', 'success');
+                    updateDBInfo();
+                };
+
+                request.onerror = () => {
+                    showMessage('Error cleaning database: ' + request.error, 'error');
+                };
+            } catch (error) {
+                showMessage('Error cleaning database: ' + error.message, 'error');
+            }
+        }
+
+        // Update database info display
+        async function updateDBInfo() {
+            try {
+                const allData = await getAllFromIndexedDB();
+                const dbInfoDiv = document.getElementById('dbInfo');
+                const dbStatsDiv = document.getElementById('dbStats');
+
+                if (allData.length === 0) {
+                    dbInfoDiv.style.display = 'none';
+                    return;
+                }
+
+                // Calculate statistics
+                const csvFiles = allData.filter(item => item.fileType === 'csv');
+                const excelFiles = allData.filter(item => item.fileType === 'excel');
+                const totalSize = allData.reduce((sum, item) => sum + item.size, 0);
+
+                // Format size
+                const formatSize = (bytes) => {
+                    if (bytes === 0) return '0 Bytes';
+                    const k = 1024;
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                };
+
+                dbStatsDiv.innerHTML = `
+                    <div class="stat-item">
+                        <div class="stat-value">${allData.length}</div>
+                        <div class="stat-label">Total Files</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${csvFiles.length}</div>
+                        <div class="stat-label">CSV Files</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${excelFiles.length}</div>
+                        <div class="stat-label">Excel Files</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${formatSize(totalSize)}</div>
+                        <div class="stat-label">Total Size</div>
+                    </div>
+                `;
+
+                dbInfoDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Error updating DB info:', error);
+            }
+        }
+
+        // Show messages
+        function showMessage(message, type) {
+            const successDiv = document.getElementById('successMessage');
+            const errorDiv = document.getElementById('errorMessage');
+
+            // Hide both messages first
+            successDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+
+            if (type === 'success') {
+                successDiv.textContent = message;
+                successDiv.style.display = 'block';
+                setTimeout(() => successDiv.style.display = 'none', 5000);
+            } else {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                setTimeout(() => errorDiv.style.display = 'none', 5000);
+            }
+        }
+
+        // File input handlers
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file selected';
+            const fileNameDiv = document.getElementById('csvFileName');
+            fileNameDiv.textContent = fileName;
+            fileNameDiv.className = e.target.files[0] ? 'file-name selected' : 'file-name';
+        });
+
+        document.getElementById('excelFile').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file selected';
+            const fileNameDiv = document.getElementById('excelFileName');
+            fileNameDiv.textContent = fileName;
+            fileNameDiv.className = e.target.files[0] ? 'file-name selected' : 'file-name';
+        });
+
+        // Process CSV file
+        async function processCSV(file) {
+            return new Promise((resolve, reject) => {
+                Papa.parse(file, {
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true,
+                    delimitersToGuess: [',', '\t', '|', ';'],
+                    complete: function(results) {
+                        if (results.errors.length > 0) {
+                            console.warn('CSV parsing warnings:', results.errors);
+                        }
+                        resolve(results.data);
+                    },
+                    error: function(error) {
+                        reject(error);
+                    }
+                });
+            });
+        }
+
+        // Process Excel file
+        async function processExcel(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        // Get first sheet
+                        console.log('Available sheets:', workbook.SheetNames);
+                        const sheetName = workbook.SheetNames[1];
+                        const worksheet = workbook.Sheets[sheetName];
+                        
+                        // Convert to JSON
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                            header: 1,
+                            defval: '',
+                            raw: false
+                        });
+                        
+                        // Convert to object format similar to CSV
+                        if (jsonData.length > 0) {
+                            const headers = jsonData[0];
+                            const rows = jsonData.slice(1);
+                            const objectData = rows.map(row => {
+                                const obj = {};
+                                headers.forEach((header, index) => {
+                                    obj[header] = row[index] || '';
+                                });
+                                return obj;
+                            });
+                            resolve(objectData);
+                        } else {
+                            resolve([]);
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = () => reject(reader.error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Process files function
+        async function processFiles() {
+            const csvFile = document.getElementById('csvFile').files[0];
+            const excelFile = document.getElementById('excelFile').files[0];
+
+            if (!csvFile && !excelFile) {
+                showMessage('Please select at least one file to process.', 'error');
+                return;
+            }
+
+            try {
+                await initDB();
+                let processedCount = 0;
+
+                if (csvFile) {
+                    const csvData = await processCSV(csvFile);
+                    await saveToIndexedDB(csvFile.name, 'csv', csvData, csvFile);
+                    processedCount++;
+                }
+
+                if (excelFile) {
+                    const excelData = await processExcel(excelFile);
+                    await saveToIndexedDB(excelFile.name, 'excel', excelData, excelFile);
+                    processedCount++;
+                }
+
+                showMessage(`Successfully processed and saved ${processedCount} file(s) to database!`, 'success');
+                updateDBInfo();
+
+            } catch (error) {
+                console.error('Processing error:', error);
+                showMessage('Error processing files: ' + error.message, 'error');
+            }
+        }
+
+        // Clear files function
+        function clearFiles() {
+            document.getElementById('csvFile').value = '';
+            document.getElementById('excelFile').value = '';
+            document.getElementById('csvFileName').textContent = 'No file selected';
+            document.getElementById('excelFileName').textContent = 'No file selected';
+            document.getElementById('csvFileName').className = 'file-name';
+            document.getElementById('excelFileName').className = 'file-name';
+            showMessage('File inputs cleared.', 'success');
+        }
+
+        // Switch dashboard function (placeholder)
+        function switchDashboard(type) {
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Here you would implement the actual dashboard switching logic
+            showMessage(`Switched to ${type} analytics dashboard`, 'success');
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', async () => {
+            await initDB();
+            updateDBInfo();
+        });
+    </script>
+</body>
+</html>
