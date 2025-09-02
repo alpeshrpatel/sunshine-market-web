@@ -45,7 +45,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -74,7 +74,7 @@
         }
 
         .stat-card .value {
-            font-size: 2.2em;
+            font-size: 1.5em;
             font-weight: 700;
             color: #333;
             margin-bottom: 5px;
@@ -93,6 +93,8 @@
             grid-template-columns: 1fr 1fr;
             gap: 30px;
             margin-bottom: 30px;
+            
+
         }
 
         .chart-container {
@@ -397,6 +399,79 @@
             font-weight: 600;
             display: none;
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 80%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .close:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 30px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 
@@ -470,10 +545,18 @@
                 <h3>📈 Revenue Distribution</h3>
                 <canvas id="revenueChart"></canvas>
             </div>
-            <div class="chart-container">
-                <h3>📦 Items Sold by Category</h3>
-                <canvas id="itemsChart"></canvas>
+            <div style="display: grid; grid-template-rows: 1fr 1fr; gap: 30px;">
+
+                <div class="chart-container">
+                    <h3>📦 Items Sold by Category</h3>
+                    <canvas id="itemsChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>💰 Revenue by Category</h3>
+                    <canvas id="revenueBarChart"></canvas>
+                </div>
             </div>
+
         </div>
 
         <div class="table-container">
@@ -496,6 +579,20 @@
                 </tbody>
             </table>
         </div>
+        <!-- Modal -->
+        <div id="productModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Products in Category</h2>
+                    <button class="close" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalContent">
+
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -508,10 +605,152 @@
         // ADD: Store original aggregated data for filtering
         let originalAggregatedData = {};
         let currentAggregatedData = {};
+        let csvFile;
+        let excelFile;
 
         document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('applyFilter').addEventListener('click', applyFilter);
         });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const tableBody = document.getElementById('tableBody');
+            const modal = document.getElementById('productModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+            const closeModal = document.getElementById('closeModal');
+
+            // Add click event to table rows
+            tableBody.addEventListener('click', function (e) {
+                console.log('Row clicked:', e.target);
+                const row = e.target.closest('tr');
+                if (row && row.dataset.category) {
+                    const category = row.dataset.category;
+                    openProductModal(category);
+                }
+            });
+
+            // Close modal events
+            closeModal.addEventListener('click', function () {
+                modal.classList.remove('show');
+            });
+
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    modal.classList.remove('show');
+                }
+            });
+
+            // Close modal on Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && modal.classList.contains('show')) {
+                    modal.classList.remove('show');
+                }
+            });
+        });
+
+        // Function to open modal and fetch product data
+        async function openProductModal(category) {
+            const modal = document.getElementById('productModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+
+            // Set modal title
+            modalTitle.textContent = `Products in ${category}`;
+
+            // Show modal
+            modal.classList.add('show');
+
+            // Show loading state
+            modalContent.innerHTML = '<div class="loading">Loading products...</div>';
+
+            try {
+                const formData = new FormData();
+                formData.append('csv_file', csvFile);
+                if (excelFile) {
+                    formData.append('excel_file', excelFile);
+                }
+                formData.append('category', category);
+                // Make API call
+                const response = await fetch(`http://127.0.0.1:8000/api/revenue/revenue-analyze?category=${encodeURIComponent(category)}`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Display the products
+                displayProducts(data, category);
+
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                modalContent.innerHTML = `
+                    <div class="error">
+                        <h4>Error loading products</h4>
+                        <p>Failed to load products for ${category}. Please try again.</p>
+                        <p><small>Error: ${error.message}</small></p>
+                    </div>
+                `;
+            }
+        }
+
+        // Function to display products in the modal
+        function displayProducts(data, category) {
+            console.log(data)
+            const modalContent = document.getElementById('modalContent');
+
+            if (!data || !data.sold_items || data.sold_items.length === 0) {
+                modalContent.innerHTML = `
+                    <div class="no-data">
+                        <h4>No products found</h4>
+                        <p>No sold products found for ${category} category.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Create table HTML
+            let tableHTML = `
+                <h4>Sold Products in ${category}</h4>
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Item Identifier</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Item Name</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Customer Price</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Vendor Price</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Revenue</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // Add product rows
+            data.sold_items.forEach((item, index) => {
+                tableHTML += `
+                    <tr style="background-color: ${index % 2 === 0 ? '#f9f9f9' : '#ffffff'};">
+                        <td style="padding: 10px; border: 1px solid #ddd;">${item.item_identifier || 'N/A'}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${item.item_name || 'N/A'}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${(item.price || 0).toFixed(2)}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${(item.vendor_price || 0)}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${(item.revenue || 0).toFixed(2)}</td>
+         <td style="padding: 10px; border: 1px solid #ddd;">${item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}</td>
+                       
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            modalContent.innerHTML = tableHTML;
+        }
 
         document.getElementById('dateFilter').addEventListener('change', handleDateFilterChange);
         document.getElementById('applyFilter').addEventListener('click', applyFilter);
@@ -586,11 +825,13 @@
         function updateTable(data) {
             const tableBody = document.getElementById('tableBody');
             const sortedData = Object.values(data).sort((a, b) => b.total_revenue - a.total_revenue);
+            console.log('sortedData for table:', sortedData);
 
             tableBody.innerHTML = '';
 
             sortedData.forEach(item => {
                 const profit = item.total_revenue - item.total_cost;
+                console.log('Calculating margin for', item.category, 'Profit:', profit, 'Revenue:', item.total_revenue, 'percentage:', item.total_revenue > 0 ? (profit / item.total_revenue * 100) : 0);
                 const margin = item.total_revenue > 0 ? (profit / item.total_revenue * 100) : 0;
 
                 let marginClass = 'profit-low';
@@ -598,6 +839,9 @@
                 else if (margin > 25) marginClass = 'profit-medium';
 
                 const row = document.createElement('tr');
+                row.onclick = function () {
+                    handleRowClick(item.category);
+                };
                 row.innerHTML = `
                     <td class="category-name">${item.category.replace(/_/g, ' ')}</td>
                     <td>${formatNumber(item.total_items_sold)}</td>
@@ -614,6 +858,7 @@
 
         let revenueChart = null;
         let itemsChart = null;
+        let revenueBarChart = null;
 
         function createRevenueChart(data) {
             try {
@@ -706,6 +951,57 @@
             }
         }
 
+
+        function createRevenueBarChart(data) {
+            try {
+                const canvas = document.getElementById('revenueBarChart');
+                const ctx = canvas.getContext('2d');
+
+                // Destroy existing chart if it exists
+                if (revenueBarChart && typeof revenueBarChart.destroy === 'function') {
+                    revenueBarChart.destroy();
+                    revenueBarChart = null;
+                }
+
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const sortedData = Object.values(data)
+                    .filter(item => item.total_revenue > 0)
+                    .sort((a, b) => b.total_revenue - a.total_revenue)
+                    .slice(0, 10);
+
+                revenueBarChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: sortedData.map(item => item.category.replace(/_/g, ' ')),
+                        datasets: [{
+                            label: 'Revenue In USD',
+                            data: sortedData.map(item => item.total_revenue),
+                            backgroundColor: [
+                                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                                '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF',
+                                '#4BC0C0', '#FF6384'
+                            ],
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error creating revenue chart:', error);
+            }
+        }
+
+
         function loadDashboard(data) {
             updateStatsCards(data);
             updateTable(data);
@@ -714,6 +1010,7 @@
             setTimeout(() => {
                 createRevenueChart(data);
                 createItemsChart(data);
+                createRevenueBarChart(data);
             }, 100);
         }
 
@@ -780,7 +1077,7 @@
 
 
             // Convert stored data back to File objects
-            const csvFile = createFileFromData(latestCSV.fileName, latestCSV.data, 'csv');
+            csvFile = createFileFromData(latestCSV.fileName, latestCSV.data, 'csv');
 
             if (latestExcel) {
                 try {
@@ -858,7 +1155,7 @@
 
             try {
                 console.log('Uploading files to API...');
-                const response = await fetch('https://sunshinemarket.shop/api/revenue/analyze/all/labels', {
+                const response = await fetch('http://127.0.0.1:8000/api/revenue/analyze/all/labels', {
                     method: 'POST',
                     body: formData
                 });
@@ -900,7 +1197,7 @@
                                 // ADD: Store original data for filtering
                                 originalAggregatedData = { ...data };
                                 currentAggregatedData = { ...data };
-                                
+
                                 loadDashboard(data);
                                 alert('✅ Data loaded successfully!');
                                 return; // Exit successfully
@@ -1201,7 +1498,7 @@
 
             try {
                 console.log('Uploading files to API...');
-                const response = await fetch('https://sunshinemarket.shop/api/revenue/analyze/all/labels', {
+                const response = await fetch('http://127.0.0.1:8000/api/revenue/analyze/all/labels', {
                     method: 'POST',
                     body: formData
                 });
@@ -1435,6 +1732,10 @@
             }
 
             return cleanedData;
+        }
+        async function handleRowClick(category) {
+            openProductModal(category);
+
         }
     </script>
 </body>

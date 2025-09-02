@@ -54,6 +54,7 @@
 
 import pandas as pd
 import re
+import math
 
 def process_revenue_files(sales_df: pd.DataFrame, df: pd.DataFrame, category: str) -> dict:
     print(f"Processing revenue files for category: {category}")
@@ -112,8 +113,8 @@ def process_revenue_files(sales_df: pd.DataFrame, df: pd.DataFrame, category: st
     matched_sales = sales_df[sales_df['ItemIdentifier'].isin(category_skus + category_codes)]
     matched_sales_item_from_inventory = category_df[category_df['SKU'].isin(matched_sales['ItemIdentifier'])]
 
-    total_revenue = matched_sales['Total Revenue'].sum()
-    total_discount = matched_sales['Total Discount'].sum()
+    total_revenue = fix_nan(matched_sales['Total Revenue'].sum())
+    total_discount = fix_nan(matched_sales['Total Discount'].sum())
     
     sold_items = []
     for _, row in matched_sales.iterrows():
@@ -216,6 +217,7 @@ def analyzeRevenueOfAllPrinterLabels(sales_df: pd.DataFrame, df: pd.DataFrame) -
             vendor_price = 0.0
             for _, item_row in matched_sales_item_from_inventory.iterrows():
                 if row['ItemIdentifier'] == item_row['SKU']:
+                    print('vendor cost:',item_row.get('Cost','0'))
                     vendor_price = item_row.get('Cost', '0')
                     break
             item = {
@@ -241,11 +243,43 @@ def analyzeRevenueOfAllPrinterLabels(sales_df: pd.DataFrame, df: pd.DataFrame) -
             # "sold_items": sold_items
         }
 
-    return results
+    return sanitize_json(results)
 
+
+# def safe_float(val):
+#     try:
+#         if val is None:
+#             return 0.0
+#         # remove $ or other symbols
+#         cleaned = re.sub(r'[^\d.\-\.]', '', str(val))
+#         return float(cleaned) if cleaned else 0.0
+#     except (ValueError, TypeError):
+#         return 0.0
+
+def sanitize_json(obj):
+    import math
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return 0.0
+        return obj
+    elif isinstance(obj, dict):
+        return {k: sanitize_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [sanitize_json(v) for v in obj]
+    return obj
 
 def safe_float(val):
     try:
-        return float(val)
+        if val is None:
+            return 0.0
+        # handle pandas/NumPy NaN explicitly
+        if str(val).lower() in ["nan", "none", "null"]:
+            return 0.0
+        # remove $ or other symbols
+        cleaned = re.sub(r"[^\d\.\-]", "", str(val))
+        return float(cleaned) if cleaned else 0.0
     except (ValueError, TypeError):
         return 0.0
+
+def fix_nan(val):
+    return 0.0 if (isinstance(val, float) and (math.isnan(val) or math.isinf(val))) else val
