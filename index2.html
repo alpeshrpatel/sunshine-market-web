@@ -458,7 +458,7 @@
             resultDiv.innerHTML = "<p style='text-align:center; color:#555;'>⏳ Processing...</p>";
 
             try {
-                const response = await fetch(`http://127.0.01:8000/api/revenue/revenue-analyze?category=${category}`, {
+                const response = await fetch(`https://sunshinemarket.shop/api/revenue/revenue-analyze?category=${category}`, {
                     method: "POST",
                     body: formData
                 });
